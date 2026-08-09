@@ -64,3 +64,34 @@ tests/      Unit and end-to-end tests
 ## Local development, tests and build
 
 Run `pnpm dev` and open `http://localhost:3000`. Run `pnpm test` for unit tests and `pnpm test:e2e` for the browser smoke test. Run `pnpm build` before release to validate the production build.
+
+## Local PostgreSQL migration validation
+
+Docker Desktop with its Linux engine running is required for this disposable local validation. The migration source of truth is `database/migrations/`; create future migrations there with an ordered filename such as `0002_description.sql`.
+
+The following PowerShell commands use the Docker Desktop CLI path that was validated on Windows. They create a local-only container without publishing a port, mount the migration read-only, and execute it with the image's `psql` client:
+
+```powershell
+$docker = "$env:LOCALAPPDATA\Programs\DockerDesktop\resources\bin\docker.exe"
+$migration = (Resolve-Path "database/migrations/0001_trading_core.sql").Path
+$validationPassword = [guid]::NewGuid().ToString("N")
+
+& $docker info
+& $docker run --rm -d --name phoenix-os-pg-validation `
+  -e POSTGRES_USER=phoenix_validation `
+  -e POSTGRES_PASSWORD=$validationPassword `
+  -e POSTGRES_DB=phoenix_validation `
+  --mount "type=bind,source=$migration,target=/validation/0001_trading_core.sql,readonly" `
+  postgres:16.11
+& $docker exec phoenix-os-pg-validation pg_isready -U phoenix_validation -d phoenix_validation
+& $docker exec phoenix-os-pg-validation psql -v ON_ERROR_STOP=1 -U phoenix_validation -d phoenix_validation -f /validation/0001_trading_core.sql
+```
+
+Remove the disposable database after validation, then repeat the start and apply commands with a new container to prove a clean reapplication:
+
+```powershell
+& $docker rm -f phoenix-os-pg-validation
+& $docker ps
+```
+
+These commands are **local validation only**. Never run reset, removal, or migration commands against a production or remote Supabase/PostgreSQL database.
