@@ -7,8 +7,21 @@ Thumbs.db
 .idea/
 
 # Environment
-.env
-.env.local
+.env*
+!.env.example
 
 # Logs
 *.log
+
+# Node.js / Next.js
+node_modules/
+.next/
+out/
+
+# Test artifacts
+playwright-report/
+test-results/
+coverage/
+
+# TypeScript incremental compiler state
+*.tsbuildinfo

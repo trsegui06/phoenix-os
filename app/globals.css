@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-phoenix-orange: #f97316;
+  --color-phoenix-surface: #172033;
+  --color-phoenix-border: #334155;
+}
+
+:root {
+  color-scheme: dark;
+  background: #0f172a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background: radial-gradient(circle at top, rgb(249 115 22 / 12%), transparent 42%), #0f172a;
+  color: #ffffff;
+  font-family: Arial, Helvetica, sans-serif;
+}

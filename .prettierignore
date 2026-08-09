@@ -1,0 +1,13 @@
+.next
+coverage
+CHANGELOG.md
+CONTRIBUTING.md
+Decisions/
+docs/
+LICENCE
+node_modules
+playwright-report
+pnpm-lock.yaml
+README.md
+Sprints/
+test-results
