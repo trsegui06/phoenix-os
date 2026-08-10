@@ -4,6 +4,7 @@ export type TradingApplicationErrorCode =
   | "VALIDATION_ERROR"
   | "TRADING_ACCOUNT_NOT_FOUND"
   | "TRADING_SESSION_NOT_FOUND"
+  | "TRADING_SETUP_NOT_FOUND"
   | "CONFLICT"
   | "PERSISTENCE_ERROR";
 export class TradingApplicationError extends Error {
