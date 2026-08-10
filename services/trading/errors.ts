@@ -1,16 +1,20 @@
-export type TradingAccountErrorCode =
+export type TradingApplicationErrorCode =
   | "UNAUTHENTICATED"
   | "TRADER_PROFILE_NOT_FOUND"
   | "VALIDATION_ERROR"
   | "TRADING_ACCOUNT_NOT_FOUND"
+  | "TRADING_SESSION_NOT_FOUND"
   | "CONFLICT"
   | "PERSISTENCE_ERROR";
-export class TradingAccountApplicationError extends Error {
+export class TradingApplicationError extends Error {
   constructor(
-    public readonly code: TradingAccountErrorCode,
+    public readonly code: TradingApplicationErrorCode,
     message: string,
   ) {
     super(message);
-    this.name = "TradingAccountApplicationError";
+    this.name = "TradingApplicationError";
   }
 }
+
+export type TradingAccountErrorCode = TradingApplicationErrorCode;
+export const TradingAccountApplicationError = TradingApplicationError;
