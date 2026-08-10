@@ -95,3 +95,20 @@ Remove the disposable database after validation, then repeat the start and apply
 ```
 
 These commands are **local validation only**. Never run reset, removal, or migration commands against a production or remote Supabase/PostgreSQL database.
+
+## Local Supabase Auth and RLS validation
+
+The project pins the Supabase CLI as a development dependency. Docker Desktop must be running. `database/migrations/` remains the only migration source; create the local-only Windows junction below before starting Supabase so the CLI reads the same files without copying them:
+
+```powershell
+$bridge = Join-Path (Resolve-Path "supabase").Path "migrations"
+if (-not (Test-Path $bridge)) {
+  New-Item -ItemType Junction -Path $bridge -Target (Resolve-Path "database/migrations").Path
+}
+
+pnpm supabase start --agent no -x studio,imgproxy,storage-api,edge-runtime,logflare,vector,mailpit,realtime
+pnpm supabase db reset --local --agent no
+pnpm supabase stop --no-backup --agent no
+```
+
+`supabase db reset --local` destroys and recreates the local database, then applies `0001`, `0002`, and later migrations from the junction. It must never be used with `--linked` for this workflow. Do not run `supabase link`, `supabase db push`, or a remote reset during local validation.
