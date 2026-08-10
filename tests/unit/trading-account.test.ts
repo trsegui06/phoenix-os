@@ -65,6 +65,24 @@ describe("Trading Account validation", () => {
     expect(validateUpdateTradingAccount({})).not.toHaveProperty("traderId");
     expect(validateUpdateTradingAccount({})).not.toHaveProperty("id");
   });
+  it("enforces snapshot pairs for partial updates", () => {
+    expect(() => validateUpdateTradingAccount({ currentBalanceCents: 1_000 })).toThrow(
+      TradingAccountValidationError,
+    );
+    expect(() =>
+      validateUpdateTradingAccount({ balanceUpdatedAt: "2026-08-10T00:00:00.000Z" }),
+    ).toThrow(TradingAccountValidationError);
+    expect(
+      validateUpdateTradingAccount({
+        currentBalanceCents: 1_000,
+        balanceUpdatedAt: "2026-08-10T00:00:00.000Z",
+      }),
+    ).toMatchObject({ currentBalanceCents: 1_000 });
+    expect(
+      validateUpdateTradingAccount({ currentBalanceCents: null, balanceUpdatedAt: null }),
+    ).toEqual({ currentBalanceCents: null, balanceUpdatedAt: null });
+    expect(validateUpdateTradingAccount({})).toEqual({});
+  });
   it("uses stable application error codes", () => {
     for (const code of [
       "VALIDATION_ERROR",

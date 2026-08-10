@@ -105,7 +105,16 @@ export function validateUpdateTradingAccount(
     Number.isNaN(Date.parse(output.balanceUpdatedAt))
   )
     throw new TradingAccountValidationError("balanceUpdatedAt must be a valid timestamp.");
-  if ((output.currentBalanceCents === null) !== (output.balanceUpdatedAt === null))
+  const hasCurrentBalance = output.currentBalanceCents !== undefined;
+  const hasBalanceTimestamp = output.balanceUpdatedAt !== undefined;
+  if (hasCurrentBalance !== hasBalanceTimestamp)
+    throw new TradingAccountValidationError(
+      "currentBalanceCents and balanceUpdatedAt must be updated together.",
+    );
+  if (
+    hasCurrentBalance &&
+    (output.currentBalanceCents === null) !== (output.balanceUpdatedAt === null)
+  )
     throw new TradingAccountValidationError(
       "currentBalanceCents and balanceUpdatedAt must be cleared together.",
     );
