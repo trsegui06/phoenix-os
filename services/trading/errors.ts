@@ -8,6 +8,7 @@ export type TradingApplicationErrorCode =
   | "TRADING_TRADE_NOT_FOUND"
   | "TRADING_TRADE_ERROR_NOT_FOUND"
   | "TRADING_OBJECTIVE_NOT_FOUND"
+  | "TRADING_REVIEW_NOT_FOUND"
   | "CONFLICT"
   | "PERSISTENCE_ERROR";
 export class TradingApplicationError extends Error {
