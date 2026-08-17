@@ -12,7 +12,32 @@ import {
   formatRate,
 } from "@/lib/trading-statistics-format";
 
-const card = "rounded-2xl border border-slate-800 bg-slate-900/80 p-5 shadow-lg shadow-black/10";
+const card = "rounded-2xl border border-slate-800 bg-slate-900/80 p-5 shadow-sm shadow-black/10";
+const numeric = "text-right tabular-nums";
+
+function SectionHeader({
+  id,
+  eyebrow,
+  title,
+  description,
+}: {
+  id?: string;
+  eyebrow: string;
+  title: string;
+  description: string;
+}) {
+  return (
+    <header>
+      <p className="text-xs font-semibold tracking-[0.16em] text-phoenix-orange uppercase">
+        {eyebrow}
+      </p>
+      <h2 id={id} className="mt-2 text-xl font-semibold tracking-tight text-white">
+        {title}
+      </h2>
+      <p className="mt-1 text-sm leading-6 text-slate-400">{description}</p>
+    </header>
+  );
+}
 
 function MoneyList({
   values,
@@ -52,9 +77,9 @@ function PerformanceTable({
 }) {
   return (
     <section className={card} aria-labelledby={`${title.replaceAll(" ", "-")}-title`}>
-      <h2 id={`${title.replaceAll(" ", "-")}-title`} className="text-lg font-semibold text-white">
+      <h3 id={`${title.replaceAll(" ", "-")}-title`} className="text-lg font-semibold text-white">
         {title}
-      </h2>
+      </h3>
       {!rows.length ? (
         <p className="mt-4 text-sm text-slate-400">No {title.toLowerCase()} available yet.</p>
       ) : (
@@ -63,10 +88,10 @@ function PerformanceTable({
             <thead className="text-xs tracking-wide text-slate-500 uppercase">
               <tr>
                 <th className="pb-3">Label</th>
-                <th className="pb-3">Trades</th>
-                <th className="pb-3">Win rate</th>
-                <th className="pb-3">Avg risk</th>
-                <th className="pb-3">Realized P&amp;L</th>
+                <th className={`pb-3 ${numeric}`}>Trades</th>
+                <th className={`pb-3 ${numeric}`}>Win rate</th>
+                <th className={`pb-3 ${numeric}`}>Avg risk</th>
+                <th className={`pb-3 ${numeric}`}>Realized P&amp;L</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800">
@@ -75,12 +100,16 @@ function PerformanceTable({
                   <th scope="row" className="py-4 font-medium text-white">
                     {row.label}
                   </th>
-                  <td className="py-4 text-slate-300">{row.metrics.totalTradeCount}</td>
-                  <td className="py-4 text-slate-300">{formatRate(row.metrics.winRate)}</td>
-                  <td className="py-4 text-slate-300">
+                  <td className={`py-4 text-slate-300 ${numeric}`}>
+                    {row.metrics.totalTradeCount}
+                  </td>
+                  <td className={`py-4 text-slate-300 ${numeric}`}>
+                    {formatRate(row.metrics.winRate)}
+                  </td>
+                  <td className={`py-4 text-slate-300 ${numeric}`}>
                     {formatBasisPoints(row.metrics.averageRiskBasisPoints)}
                   </td>
-                  <td className="py-4">
+                  <td className={`py-4 ${numeric}`}>
                     <MoneyList values={row.metrics.realizedPnlByCurrency} />
                   </td>
                 </tr>
@@ -106,12 +135,7 @@ export function TradingDashboard({
   assets: TradingAssetBreakdown[];
   errors: TradingErrorBreakdown;
 }) {
-  const kpis = [
-    [
-      "Total Trades",
-      String(overview.totalTradeCount),
-      `${overview.closedTradeCount} closed · ${overview.unresolvedTradeCount} unresolved`,
-    ],
+  const primaryKpis = [
     [
       "Win Rate",
       formatRate(overview.winRate),
@@ -123,6 +147,13 @@ export function TradingDashboard({
       formatRate(overview.tradeErrorRate),
       `${overview.tradesWithErrorsCount} affected trades`,
     ],
+  ];
+  const activity = [
+    [
+      "Total Trades",
+      String(overview.totalTradeCount),
+      `${overview.closedTradeCount} closed · ${overview.unresolvedTradeCount} unresolved`,
+    ],
     ["Reviews", String(overview.reviewCount), "Date-overlap scope"],
     ["Objectives", String(overview.objectiveCount), "Trader-wide scope"],
   ];
@@ -130,31 +161,85 @@ export function TradingDashboard({
     <div className="grid gap-6">
       {!overview.totalTradeCount && (
         <div className="rounded-xl border border-slate-800 bg-slate-900/60 px-5 py-4 text-sm text-slate-300">
-          No trading data yet.
+          <strong className="font-medium text-white">No trades recorded yet.</strong> Your
+          statistics will appear after trading data is added.
         </div>
       )}
-      <section aria-labelledby="overview-title">
-        <h2 id="overview-title" className="sr-only">
-          Overview
-        </h2>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {kpis.map(([label, value, note]) => (
-            <article key={label} className={card}>
-              <p className="text-xs font-semibold tracking-wider text-slate-500 uppercase">
-                {label}
-              </p>
-              <p className="mt-3 text-3xl font-semibold tracking-tight text-white">{value}</p>
-              <p className="mt-2 text-sm text-slate-400">{note}</p>
+      <section aria-labelledby="primary-insights-title" className="grid gap-4">
+        <SectionHeader
+          id="primary-insights-title"
+          eyebrow="Current signal"
+          title="Performance, risk and discipline"
+          description="A focused view of realized outcomes and process quality."
+        />
+        <div className="grid gap-4 xl:grid-cols-[1.35fr_1fr]">
+          <section className={`${card} xl:row-span-2`} aria-labelledby="pnl-title">
+            <h3 id="pnl-title" className="text-lg font-semibold">
+              Realized P&amp;L by Currency
+            </h3>
+            <p className="mt-1 text-sm text-slate-400">Currencies are never combined.</p>
+            {!overview.realizedPnlByCurrency.length ? (
+              <p className="mt-5 text-sm text-slate-400">No realized P&amp;L yet.</p>
+            ) : (
+              <div className="mt-5 grid gap-3">
+                {overview.realizedPnlByCurrency.map((row) => (
+                  <div
+                    key={row.currency}
+                    className="flex items-baseline justify-between gap-4 rounded-xl border border-slate-800 bg-slate-950/40 px-4 py-3"
+                  >
+                    <span className="text-sm font-medium text-slate-300">{row.currency}</span>
+                    <span
+                      className={`text-xl font-semibold ${numeric} ${row.realizedPnlCents.startsWith("-") ? "text-rose-300" : "text-emerald-300"}`}
+                    >
+                      {formatCurrencyCents(row.currency, row.realizedPnlCents)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+            <p className="mt-5 text-xs leading-5 text-slate-500">
+              Detailed realized, average, gross profit and gross loss values remain available below.
+            </p>
+          </section>
+          <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-1">
+            {primaryKpis.map(([label, value, note]) => (
+              <article key={label} className={card}>
+                <p className="text-sm font-medium text-slate-300">{label}</p>
+                <p className={`mt-2 text-2xl font-semibold tracking-tight text-white ${numeric}`}>
+                  {value}
+                </p>
+                <p className="mt-1 text-xs text-slate-500">{note}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+      <section aria-labelledby="activity-title" className="grid gap-4">
+        <SectionHeader
+          id="activity-title"
+          eyebrow="Activity & learning"
+          title="Practice context"
+          description="Volume and learning signals, intentionally separate from performance."
+        />
+        <div className="grid gap-4 sm:grid-cols-3">
+          {activity.map(([label, value, note]) => (
+            <article
+              key={label}
+              className="rounded-xl border border-slate-800 bg-slate-900/50 px-5 py-4"
+            >
+              <p className="text-sm text-slate-400">{label}</p>
+              <p className={`mt-1 text-2xl font-semibold text-white ${numeric}`}>{value}</p>
+              <p className="mt-1 text-xs text-slate-500">{note}</p>
             </article>
           ))}
         </div>
       </section>
-      <section className={card} aria-labelledby="pnl-title">
+      <section className={card} aria-labelledby="pnl-detail-title">
         <div>
-          <h2 id="pnl-title" className="text-lg font-semibold">
-            Realized P&amp;L by Currency
+          <h2 id="pnl-detail-title" className="text-lg font-semibold">
+            P&amp;L detail
           </h2>
-          <p className="mt-1 text-sm text-slate-400">Currencies are never combined.</p>
+          <p className="mt-1 text-sm text-slate-400">Exact currency-scoped realized results.</p>
         </div>
         {!overview.realizedPnlByCurrency.length ? (
           <p className="mt-5 text-sm text-slate-400">No realized P&amp;L yet.</p>
@@ -164,22 +249,26 @@ export function TradingDashboard({
               <thead className="text-xs text-slate-500 uppercase">
                 <tr>
                   <th className="pb-3">Currency</th>
-                  <th className="pb-3">Realized</th>
-                  <th className="pb-3">Average Trade</th>
-                  <th className="pb-3">Gross Profit</th>
-                  <th className="pb-3">Gross Loss</th>
+                  <th className={`pb-3 ${numeric}`}>Realized</th>
+                  <th className={`pb-3 ${numeric}`}>Average Trade</th>
+                  <th className={`pb-3 ${numeric}`}>Gross Profit</th>
+                  <th className={`pb-3 ${numeric}`}>Gross Loss</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800">
                 {overview.realizedPnlByCurrency.map((row) => (
                   <tr key={row.currency}>
                     <th className="py-4 text-white">{row.currency}</th>
-                    <td>{formatCurrencyCents(row.currency, row.realizedPnlCents)}</td>
-                    <td>{formatCurrencyCents(row.currency, row.averagePnlCents)}</td>
-                    <td className="text-emerald-300">
+                    <td className={numeric}>
+                      {formatCurrencyCents(row.currency, row.realizedPnlCents)}
+                    </td>
+                    <td className={numeric}>
+                      {formatCurrencyCents(row.currency, row.averagePnlCents)}
+                    </td>
+                    <td className={`text-emerald-300 ${numeric}`}>
                       {formatCurrencyCents(row.currency, row.grossProfitCents)}
                     </td>
-                    <td className="text-rose-300">
+                    <td className={`text-rose-300 ${numeric}`}>
                       {formatCurrencyCents(row.currency, row.grossLossCents)}
                     </td>
                   </tr>
@@ -189,6 +278,11 @@ export function TradingDashboard({
           </div>
         )}
       </section>
+      <SectionHeader
+        eyebrow="Performance breakdowns"
+        title="Execution patterns"
+        description="Exact backend ordering with no ranking or label normalization."
+      />
       <PerformanceTable
         title="Setup Performance"
         rows={setups.map((row) => ({
@@ -209,10 +303,15 @@ export function TradingDashboard({
         title="Asset Performance"
         rows={assets.map((row) => ({ key: row.asset, label: row.asset, metrics: row.metrics }))}
       />
+      <SectionHeader
+        eyebrow="Discipline"
+        title="Error patterns"
+        description="Frequency and affected trades without severity weighting."
+      />
       <section className={card} aria-labelledby="errors-title">
-        <h2 id="errors-title" className="text-lg font-semibold">
+        <h3 id="errors-title" className="text-lg font-semibold">
           Trade Error Insights
-        </h2>
+        </h3>
         {!errors.byCategory.length && !errors.bySeverity.length ? (
           <p className="mt-4 text-sm text-slate-400">No recorded Trade Errors.</p>
         ) : (
@@ -227,8 +326,8 @@ export function TradingDashboard({
                   <thead className="text-xs text-slate-500 uppercase">
                     <tr>
                       <th className="pb-2">Label</th>
-                      <th className="pb-2">Errors</th>
-                      <th className="pb-2">Affected Trades</th>
+                      <th className={`pb-2 ${numeric}`}>Errors</th>
+                      <th className={`pb-2 ${numeric}`}>Affected Trades</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800">
@@ -241,8 +340,8 @@ export function TradingDashboard({
                     ).map((x) => (
                       <tr key={x.label}>
                         <th className="py-3 text-white">{x.label}</th>
-                        <td>{x.errorCount}</td>
-                        <td>{x.affectedTradeCount}</td>
+                        <td className={numeric}>{x.errorCount}</td>
+                        <td className={numeric}>{x.affectedTradeCount}</td>
                       </tr>
                     ))}
                   </tbody>

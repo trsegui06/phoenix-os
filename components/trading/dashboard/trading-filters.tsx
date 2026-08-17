@@ -11,7 +11,10 @@ export function TradingFilters({
   const control =
     "h-11 rounded-lg border border-slate-700 bg-slate-950/60 px-3 text-sm text-white outline-none focus:border-phoenix-orange focus:ring-2 focus:ring-orange-500/20";
   return (
-    <form className="grid gap-4 rounded-2xl border border-slate-800 bg-slate-900/70 p-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1.5fr_auto_auto] lg:items-end">
+    <form
+      aria-label="Trading statistics filters"
+      className="grid gap-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1.5fr_auto_auto] lg:items-end"
+    >
       <label className="grid gap-2 text-xs font-semibold tracking-wide text-slate-400 uppercase">
         From
         <input className={control} type="date" name="from" defaultValue={filter.from} />

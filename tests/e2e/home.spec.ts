@@ -16,12 +16,13 @@ test("renders the Trading Dashboard zero state", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Session Performance" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Asset Performance" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Trade Error Insights" })).toBeVisible();
-  await expect(page.getByText("No trading data yet.")).toBeVisible();
+  await expect(page.getByText("No trades recorded yet.")).toBeVisible();
 });
 
 test("keeps the Trading Dashboard usable across responsive viewports", async ({ page }) => {
   for (const viewport of [
     { width: 1440, height: 900 },
+    { width: 1024, height: 768 },
     { width: 768, height: 1024 },
     { width: 390, height: 844 },
   ]) {
