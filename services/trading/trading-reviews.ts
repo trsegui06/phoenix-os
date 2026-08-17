@@ -56,10 +56,9 @@ export async function createTradingReview(client: SupabaseClient, input: CreateT
     if (result.error || !result.review) fail();
     if (
       (value.tradeIds !== undefined &&
-        (await repository.replaceTradeLinks(result.review.id, traderId, value.tradeIds)).error) ||
+        (await repository.replaceTradeLinks(result.review.id, value.tradeIds)).error) ||
       (value.objectiveIds !== undefined &&
-        (await repository.replaceObjectiveLinks(result.review.id, traderId, value.objectiveIds))
-          .error)
+        (await repository.replaceObjectiveLinks(result.review.id, value.objectiveIds)).error)
     )
       fail();
     return hydrate(repository, result.review);
@@ -91,8 +90,8 @@ export async function updateTradingReview(
   input: UpdateTradingReviewInput,
 ) {
   try {
-    const traderId = await trader(client),
-      value = validateUpdateTradingReview(input);
+    await trader(client);
+    const value = validateUpdateTradingReview(input);
     await owned(client, "trades", value.tradeIds);
     await owned(client, "objectives", value.objectiveIds);
     const repository = new TradingReviewRepository(client),
@@ -102,9 +101,9 @@ export async function updateTradingReview(
       throw new TradingApplicationError("TRADING_REVIEW_NOT_FOUND", "Trading Review not found.");
     if (
       (value.tradeIds !== undefined &&
-        (await repository.replaceTradeLinks(id, traderId, value.tradeIds)).error) ||
+        (await repository.replaceTradeLinks(id, value.tradeIds)).error) ||
       (value.objectiveIds !== undefined &&
-        (await repository.replaceObjectiveLinks(id, traderId, value.objectiveIds)).error)
+        (await repository.replaceObjectiveLinks(id, value.objectiveIds)).error)
     )
       fail();
     return hydrate(repository, result.review);

@@ -71,26 +71,18 @@ export class TradingReviewRepository {
       error: a.error || b.error,
     };
   }
-  async replaceTradeLinks(reviewId: string, traderId: string, tradeIds: string[]) {
-    const d = await this.client.from("review_trades").delete().eq("review_id", reviewId);
-    if (d.error) return { error: d.error };
-    if (!tradeIds.length) return { error: null };
-    const { error } = await this.client
-      .from("review_trades")
-      .insert(tradeIds.map((trade_id) => ({ review_id: reviewId, trade_id, trader_id: traderId })));
+  async replaceTradeLinks(reviewId: string, tradeIds: string[]) {
+    const { error } = await this.client.rpc("replace_review_trade_links", {
+      target_review_id: reviewId,
+      target_trade_ids: [...new Set(tradeIds)],
+    });
     return { error };
   }
-  async replaceObjectiveLinks(reviewId: string, traderId: string, objectiveIds: string[]) {
-    const d = await this.client.from("review_objectives").delete().eq("review_id", reviewId);
-    if (d.error) return { error: d.error };
-    if (!objectiveIds.length) return { error: null };
-    const { error } = await this.client.from("review_objectives").insert(
-      objectiveIds.map((objective_id) => ({
-        review_id: reviewId,
-        objective_id,
-        trader_id: traderId,
-      })),
-    );
+  async replaceObjectiveLinks(reviewId: string, objectiveIds: string[]) {
+    const { error } = await this.client.rpc("replace_review_objective_links", {
+      target_review_id: reviewId,
+      target_objective_ids: [...new Set(objectiveIds)],
+    });
     return { error };
   }
 }

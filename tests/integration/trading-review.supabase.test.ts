@@ -126,6 +126,51 @@ describe.skipIf(!enabled)("Trading Review local Supabase integration", () => {
     });
     expect(updated.tradeIds).toEqual([ra.trades[1].id]);
     expect(updated.objectiveIds).toEqual([ra.objectives[1].id]);
+    await A.rpc("replace_review_trade_links", {
+      target_review_id: review.id,
+      target_trade_ids: [ra.trades[0].id],
+    }).throwOnError();
+    const failedTradeReplacement = await A.rpc("replace_review_trade_links", {
+      target_review_id: review.id,
+      target_trade_ids: [ra.trades[1].id, rb.trades[0].id],
+    });
+    expect(failedTradeReplacement.error).not.toBeNull();
+    expect((await getTradingReview(A, review.id)).tradeIds).toEqual([ra.trades[0].id]);
+    await A.rpc("replace_review_objective_links", {
+      target_review_id: review.id,
+      target_objective_ids: [ra.objectives[0].id],
+    }).throwOnError();
+    const failedObjectiveReplacement = await A.rpc("replace_review_objective_links", {
+      target_review_id: review.id,
+      target_objective_ids: [ra.objectives[1].id, rb.objectives[0].id],
+    });
+    expect(failedObjectiveReplacement.error).not.toBeNull();
+    expect((await getTradingReview(A, review.id)).objectiveIds).toEqual([ra.objectives[0].id]);
+    await A.rpc("replace_review_trade_links", {
+      target_review_id: review.id,
+      target_trade_ids: [ra.trades[0].id, ra.trades[1].id, ra.trades[1].id],
+    }).throwOnError();
+    expect(new Set((await getTradingReview(A, review.id)).tradeIds)).toEqual(
+      new Set([ra.trades[0].id, ra.trades[1].id]),
+    );
+    await A.rpc("replace_review_trade_links", {
+      target_review_id: review.id,
+      target_trade_ids: [],
+    }).throwOnError();
+    await A.rpc("replace_review_objective_links", {
+      target_review_id: review.id,
+      target_objective_ids: [],
+    }).throwOnError();
+    expect((await getTradingReview(A, review.id)).tradeIds).toEqual([]);
+    expect((await getTradingReview(A, review.id)).objectiveIds).toEqual([]);
+    expect(
+      (
+        await B.rpc("replace_review_trade_links", {
+          target_review_id: review.id,
+          target_trade_ids: [rb.trades[0].id],
+        })
+      ).error,
+    ).not.toBeNull();
     expect(await code(updateTradingReview(A, review.id, { tradeIds: [rb.trades[0].id] }))).toBe(
       "PERSISTENCE_ERROR",
     );
@@ -133,6 +178,14 @@ describe.skipIf(!enabled)("Trading Review local Supabase integration", () => {
       await code(updateTradingReview(A, review.id, { objectiveIds: [rb.objectives[0].id] })),
     ).toBe("PERSISTENCE_ERROR");
     const U = createClient(url!, key!, { auth: { persistSession: false } });
+    expect(
+      (
+        await U.rpc("replace_review_trade_links", {
+          target_review_id: review.id,
+          target_trade_ids: [],
+        })
+      ).error,
+    ).not.toBeNull();
     expect(
       await code(
         createTradingReview(U, {
@@ -145,5 +198,5 @@ describe.skipIf(!enabled)("Trading Review local Supabase integration", () => {
     expect(await code(listTradingReviews(U))).toBe("UNAUTHENTICATED");
     expect(await code(getTradingReview(U, review.id))).toBe("UNAUTHENTICATED");
     expect(await code(updateTradingReview(U, review.id, { summary: "x" }))).toBe("UNAUTHENTICATED");
-  });
+  }, 30_000);
 });

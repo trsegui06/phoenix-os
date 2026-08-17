@@ -28,6 +28,8 @@ Every insert and update has an ownership `WITH CHECK`. This prevents cross-tenan
 
 No normal client role receives `DELETE` on Trading Core tables. This preserves identities, accounts, trades, errors and reviews; later archival or correction flows require audited application services.
 
+Review Trade and Objective relation sets are replaced through authenticated-only database RPCs. Each function derives the Trader from `auth.uid()`, validates the Review and the complete requested relation set before mutation, and then deletes and inserts inside one PostgreSQL transaction. The functions use a fixed empty `search_path`, expose no service-role workflow, and revoke execution from `PUBLIC`; any failure rolls back the entire relation replacement.
+
 ## Service and threat boundary
 
 Browser and normal server clients use the publishable key and caller session, so database RLS remains active. A service-role client may only be introduced for server-side administrative or audited background work. RLS protects against UUID guessing, cross-tenant query/write attempts and reassignment attempts; it does not replace input validation, audit logging, or protection of a compromised service-role credential.
