@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/auth/login-form";
 import { PhoenixMark } from "@/components/ui/phoenix-mark";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
+import { hasCurrentTrader } from "@/services/trading/trader-provisioning";
 
 export default async function LoginPage() {
   const client = await getSupabaseServerClient();
@@ -10,7 +11,7 @@ export default async function LoginPage() {
     const {
       data: { user },
     } = await client.auth.getUser();
-    if (user) redirect("/trading");
+    if (user) redirect((await hasCurrentTrader(client)) ? "/trading" : "/onboarding");
   }
 
   return (

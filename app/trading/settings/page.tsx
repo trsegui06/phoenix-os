@@ -43,17 +43,7 @@ export default async function TradingSettingsPage({
     await resolveCurrentTraderId(client);
   } catch (error) {
     if (error instanceof TradingApplicationError && error.code === "TRADER_PROFILE_NOT_FOUND")
-      return (
-        <main className="mx-auto max-w-3xl px-4 py-12">
-          <h1 className="text-3xl font-semibold text-white">Trading Setup</h1>
-          <p role="status" className="mt-6 text-amber-200">
-            Your account is signed in, but your trading workspace is not configured yet.
-          </p>
-          <Link href="/trading" className="mt-6 inline-block text-phoenix-orange">
-            Back to dashboard
-          </Link>
-        </main>
-      );
+      redirect("/onboarding");
     throw error;
   }
   const [accounts, sessions, setups] = await Promise.all([

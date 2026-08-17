@@ -27,14 +27,8 @@ export async function proxy(request: NextRequest) {
   } = await client.auth.getUser();
   const pathname = request.nextUrl.pathname;
 
-  if (!user && pathname.startsWith("/trading")) {
+  if (!user && (pathname.startsWith("/trading") || pathname === "/onboarding")) {
     const redirectResponse = NextResponse.redirect(new URL("/login", request.url));
-    response.cookies.getAll().forEach((cookie) => redirectResponse.cookies.set(cookie));
-    return redirectResponse;
-  }
-
-  if (user && pathname === "/login") {
-    const redirectResponse = NextResponse.redirect(new URL("/trading", request.url));
     response.cookies.getAll().forEach((cookie) => redirectResponse.cookies.set(cookie));
     return redirectResponse;
   }
@@ -43,5 +37,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/login", "/trading/:path*"],
+  matcher: ["/login", "/onboarding", "/trading/:path*"],
 };

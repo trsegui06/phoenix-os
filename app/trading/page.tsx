@@ -53,7 +53,7 @@ export default async function TradingPage({ searchParams }: { searchParams: Sear
   const search = await searchParams;
   let filter: TradingStatisticsFilter = {};
   let notice: string | null = null;
-  let workspaceConfigured = true;
+  const workspaceConfigured = true;
   const created = search.created === "trade";
   try {
     filter = validateTradingStatisticsFilter({
@@ -92,8 +92,7 @@ export default async function TradingPage({ searchParams }: { searchParams: Sear
     }
   } catch (error) {
     if (error instanceof TradingApplicationError && error.code === "TRADER_PROFILE_NOT_FOUND") {
-      workspaceConfigured = false;
-      notice = "Your account is signed in, but your trading workspace is not configured yet.";
+      redirect("/onboarding");
     } else {
       notice = "Trading data is unavailable right now. Please try again shortly.";
     }

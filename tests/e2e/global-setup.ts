@@ -20,7 +20,10 @@ export default async function globalSetup() {
     const signin = await client.auth.signInWithPassword(credentials);
     if (signin.error) throw signin.error;
 
-    if (credentials.email !== e2eMissingProfileUser.email) {
+    if (
+      credentials.email !== e2eMissingProfileUser.email &&
+      credentials.email !== e2eSelfServiceUser.email
+    ) {
       const userId = signin.data.user.id;
       const existing = await client
         .from("traders")
@@ -37,11 +40,6 @@ export default async function globalSetup() {
           .single();
         if (profile.error) throw profile.error;
         traderId = profile.data.id;
-      }
-      if (credentials.email === e2eSelfServiceUser.email) {
-        const signout = await client.auth.signOut();
-        if (signout.error) throw signout.error;
-        continue;
       }
       const account = await client
         .from("trading_accounts")

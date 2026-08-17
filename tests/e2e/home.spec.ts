@@ -24,9 +24,11 @@ test("completes the first Trade from zero prerequisites without operator interve
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/login");
   await signIn(page, e2eSelfServiceUser);
-  await page.getByRole("link", { name: "New Trade" }).click();
-  await expect(page.getByRole("link", { name: "Manage Trading Setup" })).toBeVisible();
-  await page.getByRole("link", { name: "Manage Trading Setup" }).click();
+  await expect(page).toHaveURL(/\/onboarding$/);
+  await page.getByLabel("Name").fill("Self-Service Trader");
+  await page.getByLabel("Timezone").fill("Europe/Paris");
+  await page.getByRole("button", { name: "Build my trading workspace" }).click();
+  await expect(page).toHaveURL(/\/trading\/settings$/);
   await expect(page.getByRole("heading", { name: "Trading Setup", exact: true })).toBeVisible();
 
   const accounts = page.getByRole("region", { name: "Trading Accounts" });
@@ -102,6 +104,8 @@ test("protects Trading, creates a session, logs out, and destroys the session", 
   await expect(page).toHaveURL(/\/login$/);
   await page.goto("/trading/settings");
   await expect(page).toHaveURL(/\/login$/);
+  await page.goto("/onboarding");
+  await expect(page).toHaveURL(/\/login$/);
 
   await signIn(page);
   await expect(page).toHaveURL(/\/trading$/);
@@ -166,17 +170,13 @@ test("redirects an authenticated user away from Login", async ({ page }) => {
   await expect(page).toHaveURL(/\/trading$/);
 });
 
-test("shows a controlled state for a missing Trader profile", async ({ page }) => {
+test("routes an authenticated user without a Trader to onboarding", async ({ page }) => {
   await page.goto("/login");
   await signIn(page, e2eMissingProfileUser);
-  await expect(page).toHaveURL(/\/trading$/);
-  await expect(
-    page.getByText("Your account is signed in, but your trading workspace is not configured yet."),
-  ).toBeVisible();
+  await expect(page).toHaveURL(/\/onboarding$/);
+  await expect(page.getByRole("heading", { name: "Build your trading workspace." })).toBeVisible();
   await page.goto("/trading/settings");
-  await expect(
-    page.getByText("Your account is signed in, but your trading workspace is not configured yet."),
-  ).toBeVisible();
+  await expect(page).toHaveURL(/\/onboarding$/);
   await expect(page.getByText("Add Account")).toHaveCount(0);
 });
 

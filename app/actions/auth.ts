@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 
 import { mapAuthenticationError, validateLoginCredentials } from "@/lib/auth/login";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
+import { hasCurrentTrader } from "@/services/trading/trader-provisioning";
 
 export type LoginActionState = {
   message?: string;
@@ -30,7 +31,7 @@ export async function login(
     return { message: mapAuthenticationError(error.code) };
   }
 
-  redirect("/trading");
+  redirect((await hasCurrentTrader(client)) ? "/trading" : "/onboarding");
 }
 
 export async function logout(): Promise<never> {
