@@ -1,4 +1,5 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { PhoenixSupabaseClient } from "@/lib/supabase/types";
+import type { Database } from "@/lib/supabase/database.types";
 import type {
   CreateTradeErrorInput,
   TradeError,
@@ -29,12 +30,12 @@ const db = (input: CreateTradeErrorInput | UpdateTradeErrorInput): Row => ({
 });
 
 export class TradeErrorRepository {
-  constructor(private readonly client: SupabaseClient) {}
+  constructor(private readonly client: PhoenixSupabaseClient) {}
 
   async create(input: CreateTradeErrorInput) {
     const { data, error } = await this.client
       .from("trade_errors")
-      .insert(db(input))
+      .insert(db(input) as Database["public"]["Tables"]["trade_errors"]["Insert"])
       .select(columns)
       .single();
     return { tradeError: data ? map(data as Row) : null, error };

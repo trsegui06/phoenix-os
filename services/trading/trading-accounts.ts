@@ -1,4 +1,5 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { PhoenixSupabaseClient } from "@/lib/supabase/types";
+import { resolveCurrentTraderId } from "./current-trader";
 import { TradingAccountRepository } from "@/data/trading/trading-account-repository";
 import {
   TradingAccountValidationError,
@@ -8,29 +9,6 @@ import {
   type UpdateTradingAccountInput,
 } from "@/domain/trading/trading-account";
 import { TradingAccountApplicationError } from "./errors";
-async function trader(c: SupabaseClient) {
-  const {
-    data: { user },
-  } = await c.auth.getUser();
-  if (!user)
-    throw new TradingAccountApplicationError("UNAUTHENTICATED", "Authentication is required.");
-  const { data, error } = await c
-    .from("traders")
-    .select("id")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
-  if (error)
-    throw new TradingAccountApplicationError(
-      "PERSISTENCE_ERROR",
-      "Unable to resolve the Trader profile.",
-    );
-  if (!data)
-    throw new TradingAccountApplicationError(
-      "TRADER_PROFILE_NOT_FOUND",
-      "A Trader profile is required.",
-    );
-  return String((data as { id: string }).id);
-}
 const fail = (e: { code?: string } | null) => {
   throw new TradingAccountApplicationError(
     e?.code === "23505" ? "CONFLICT" : "PERSISTENCE_ERROR",
@@ -39,10 +17,10 @@ const fail = (e: { code?: string } | null) => {
       : "The Trading Account could not be saved.",
   );
 };
-export async function createTradingAccount(c: SupabaseClient, i: CreateTradingAccountInput) {
+export async function createTradingAccount(c: PhoenixSupabaseClient, i: CreateTradingAccountInput) {
   try {
     const r = await new TradingAccountRepository(c).create(
-      await trader(c),
+      await resolveCurrentTraderId(c),
       validateCreateTradingAccount(i),
     );
     if (r.error) fail(r.error);
@@ -53,14 +31,14 @@ export async function createTradingAccount(c: SupabaseClient, i: CreateTradingAc
     throw e;
   }
 }
-export async function listTradingAccounts(c: SupabaseClient) {
-  await trader(c);
+export async function listTradingAccounts(c: PhoenixSupabaseClient) {
+  await resolveCurrentTraderId(c);
   const r = await new TradingAccountRepository(c).listForCurrentTrader();
   if (r.error) fail(r.error);
   return r.accounts!;
 }
-export async function getTradingAccount(c: SupabaseClient, id: string) {
-  await trader(c);
+export async function getTradingAccount(c: PhoenixSupabaseClient, id: string) {
+  await resolveCurrentTraderId(c);
   const r = await new TradingAccountRepository(c).findByIdForCurrentTrader(id);
   if (r.error) fail(r.error);
   if (!r.account)
@@ -71,12 +49,12 @@ export async function getTradingAccount(c: SupabaseClient, id: string) {
   return r.account;
 }
 export async function updateTradingAccount(
-  c: SupabaseClient,
+  c: PhoenixSupabaseClient,
   id: string,
   i: UpdateTradingAccountInput,
 ) {
   try {
-    await trader(c);
+    await resolveCurrentTraderId(c);
     const r = await new TradingAccountRepository(c).updateForCurrentTrader(
       id,
       validateUpdateTradingAccount(i),

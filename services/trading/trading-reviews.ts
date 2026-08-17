@@ -1,4 +1,5 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { PhoenixSupabaseClient } from "@/lib/supabase/types";
+import { resolveCurrentTraderId } from "./current-trader";
 import { TradingReviewRepository } from "@/data/trading/trading-review-repository";
 import {
   type CreateTradingReviewInput,
@@ -10,26 +11,11 @@ import {
 import type { TradingReview } from "@/domain/trading/trading-review";
 import { TradingApplicationError } from "./errors";
 
-async function trader(client: SupabaseClient) {
-  const { data: auth } = await client.auth.getUser();
-  if (!auth.user)
-    throw new TradingApplicationError("UNAUTHENTICATED", "Authentication is required.");
-  const { data, error } = await client
-    .from("traders")
-    .select("id")
-    .eq("auth_user_id", auth.user.id)
-    .maybeSingle();
-  if (error)
-    throw new TradingApplicationError("PERSISTENCE_ERROR", "Unable to resolve the Trader profile.");
-  if (!data)
-    throw new TradingApplicationError("TRADER_PROFILE_NOT_FOUND", "A Trader profile is required.");
-  return String((data as { id: string }).id);
-}
 function fail(): never {
   throw new TradingApplicationError("PERSISTENCE_ERROR", "The Trading Review could not be saved.");
 }
 async function owned(
-  client: SupabaseClient,
+  client: PhoenixSupabaseClient,
   table: "trades" | "objectives",
   ids: string[] | undefined,
 ) {
@@ -45,9 +31,12 @@ async function hydrate(
   if (links.error || !links.tradeIds || !links.objectiveIds) fail();
   return { ...review, tradeIds: links.tradeIds, objectiveIds: links.objectiveIds };
 }
-export async function createTradingReview(client: SupabaseClient, input: CreateTradingReviewInput) {
+export async function createTradingReview(
+  client: PhoenixSupabaseClient,
+  input: CreateTradingReviewInput,
+) {
   try {
-    const traderId = await trader(client),
+    const traderId = await resolveCurrentTraderId(client),
       value = validateCreateTradingReview(input);
     await owned(client, "trades", value.tradeIds);
     await owned(client, "objectives", value.objectiveIds);
@@ -68,15 +57,15 @@ export async function createTradingReview(client: SupabaseClient, input: CreateT
     throw error;
   }
 }
-export async function listTradingReviews(client: SupabaseClient) {
-  await trader(client);
+export async function listTradingReviews(client: PhoenixSupabaseClient) {
+  await resolveCurrentTraderId(client);
   const repository = new TradingReviewRepository(client),
     result = await repository.listForCurrentTrader();
   if (result.error || !result.reviews) fail();
   return Promise.all(result.reviews.map((review) => hydrate(repository, review)));
 }
-export async function getTradingReview(client: SupabaseClient, id: string) {
-  await trader(client);
+export async function getTradingReview(client: PhoenixSupabaseClient, id: string) {
+  await resolveCurrentTraderId(client);
   const repository = new TradingReviewRepository(client),
     result = await repository.findByIdForCurrentTrader(id);
   if (result.error) fail();
@@ -85,12 +74,12 @@ export async function getTradingReview(client: SupabaseClient, id: string) {
   return hydrate(repository, result.review);
 }
 export async function updateTradingReview(
-  client: SupabaseClient,
+  client: PhoenixSupabaseClient,
   id: string,
   input: UpdateTradingReviewInput,
 ) {
   try {
-    await trader(client);
+    await resolveCurrentTraderId(client);
     const value = validateUpdateTradingReview(input);
     await owned(client, "trades", value.tradeIds);
     await owned(client, "objectives", value.objectiveIds);

@@ -1,4 +1,5 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { PhoenixSupabaseClient } from "@/lib/supabase/types";
+import { resolveCurrentTraderId } from "./current-trader";
 import { TradingSessionRepository } from "@/data/trading/trading-session-repository";
 import {
   type CreateTradingSessionInput,
@@ -9,35 +10,17 @@ import {
 } from "@/domain/trading/trading-session";
 import { TradingApplicationError } from "./errors";
 
-async function currentTraderId(client: SupabaseClient) {
-  const {
-    data: { user },
-  } = await client.auth.getUser();
-  if (!user) throw new TradingApplicationError("UNAUTHENTICATED", "Authentication is required.");
-
-  const { data, error } = await client
-    .from("traders")
-    .select("id")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
-  if (error)
-    throw new TradingApplicationError("PERSISTENCE_ERROR", "Unable to resolve the Trader profile.");
-  if (!data)
-    throw new TradingApplicationError("TRADER_PROFILE_NOT_FOUND", "A Trader profile is required.");
-  return String((data as { id: string }).id);
-}
-
 function persistenceError(): never {
   throw new TradingApplicationError("PERSISTENCE_ERROR", "The Trading Session could not be saved.");
 }
 
 export async function createTradingSession(
-  client: SupabaseClient,
+  client: PhoenixSupabaseClient,
   input: CreateTradingSessionInput,
 ) {
   try {
     const result = await new TradingSessionRepository(client).create(
-      await currentTraderId(client),
+      await resolveCurrentTraderId(client),
       validateCreateTradingSession(input),
     );
     if (result.error || !result.session) persistenceError();
@@ -49,15 +32,15 @@ export async function createTradingSession(
   }
 }
 
-export async function listTradingSessions(client: SupabaseClient) {
-  await currentTraderId(client);
+export async function listTradingSessions(client: PhoenixSupabaseClient) {
+  await resolveCurrentTraderId(client);
   const result = await new TradingSessionRepository(client).listForCurrentTrader();
   if (result.error || !result.sessions) persistenceError();
   return result.sessions;
 }
 
-export async function getTradingSession(client: SupabaseClient, id: string) {
-  await currentTraderId(client);
+export async function getTradingSession(client: PhoenixSupabaseClient, id: string) {
+  await resolveCurrentTraderId(client);
   const result = await new TradingSessionRepository(client).findByIdForCurrentTrader(id);
   if (result.error) persistenceError();
   if (!result.session)
@@ -66,12 +49,12 @@ export async function getTradingSession(client: SupabaseClient, id: string) {
 }
 
 export async function updateTradingSession(
-  client: SupabaseClient,
+  client: PhoenixSupabaseClient,
   id: string,
   input: UpdateTradingSessionInput,
 ) {
   try {
-    await currentTraderId(client);
+    await resolveCurrentTraderId(client);
     const result = await new TradingSessionRepository(client).updateForCurrentTrader(
       id,
       validateUpdateTradingSession(input),

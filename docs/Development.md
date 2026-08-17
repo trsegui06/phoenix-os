@@ -37,6 +37,7 @@ pnpm format:check
 pnpm typecheck
 pnpm test
 pnpm test:e2e
+pnpm db:types
 ```
 
 The repository uses pnpm. The scripts are standard npm scripts and can also be run with `npm run <script>` when npm is available in the local Node.js installation.
@@ -112,3 +113,5 @@ pnpm supabase stop --no-backup --agent no
 ```
 
 `supabase db reset --local` destroys and recreates the local database, then applies `0001`, `0002`, and later migrations from the junction. It must never be used with `--linked` for this workflow. Do not run `supabase link`, `supabase db push`, or a remote reset during local validation.
+
+With local Supabase running and all migrations applied, regenerate the checked-in public database types with `pnpm db:types`. The generated `lib/supabase/database.types.ts` file is infrastructure output: do not hand-edit it or use it as a domain model. Regenerate it after every database migration and include the resulting diff in the same change.

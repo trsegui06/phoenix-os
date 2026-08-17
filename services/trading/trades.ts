@@ -1,4 +1,5 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { PhoenixSupabaseClient } from "@/lib/supabase/types";
+import { resolveCurrentTraderId } from "./current-trader";
 import { TradeRepository } from "@/data/trading/trade-repository";
 import {
   type CreateTradeInput,
@@ -9,31 +10,14 @@ import {
 } from "@/domain/trading/trade";
 import { TradingApplicationError } from "./errors";
 
-async function currentTraderId(client: SupabaseClient) {
-  const {
-    data: { user },
-  } = await client.auth.getUser();
-  if (!user) throw new TradingApplicationError("UNAUTHENTICATED", "Authentication is required.");
-  const { data, error } = await client
-    .from("traders")
-    .select("id")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
-  if (error)
-    throw new TradingApplicationError("PERSISTENCE_ERROR", "Unable to resolve the Trader profile.");
-  if (!data)
-    throw new TradingApplicationError("TRADER_PROFILE_NOT_FOUND", "A Trader profile is required.");
-  return String((data as { id: string }).id);
-}
-
 function persistenceError(): never {
   throw new TradingApplicationError("PERSISTENCE_ERROR", "The Trade could not be saved.");
 }
 
-export async function createTrade(client: SupabaseClient, input: CreateTradeInput) {
+export async function createTrade(client: PhoenixSupabaseClient, input: CreateTradeInput) {
   try {
     const result = await new TradeRepository(client).create(
-      await currentTraderId(client),
+      await resolveCurrentTraderId(client),
       validateCreateTrade(input),
     );
     if (result.error || !result.trade) persistenceError();
@@ -45,15 +29,15 @@ export async function createTrade(client: SupabaseClient, input: CreateTradeInpu
   }
 }
 
-export async function listTrades(client: SupabaseClient) {
-  await currentTraderId(client);
+export async function listTrades(client: PhoenixSupabaseClient) {
+  await resolveCurrentTraderId(client);
   const result = await new TradeRepository(client).listForCurrentTrader();
   if (result.error || !result.trades) persistenceError();
   return result.trades;
 }
 
-export async function getTrade(client: SupabaseClient, id: string) {
-  await currentTraderId(client);
+export async function getTrade(client: PhoenixSupabaseClient, id: string) {
+  await resolveCurrentTraderId(client);
   const result = await new TradeRepository(client).findByIdForCurrentTrader(id);
   if (result.error) persistenceError();
   if (!result.trade)
@@ -61,9 +45,13 @@ export async function getTrade(client: SupabaseClient, id: string) {
   return result.trade;
 }
 
-export async function updateTrade(client: SupabaseClient, id: string, input: UpdateTradeInput) {
+export async function updateTrade(
+  client: PhoenixSupabaseClient,
+  id: string,
+  input: UpdateTradeInput,
+) {
   try {
-    await currentTraderId(client);
+    await resolveCurrentTraderId(client);
     const result = await new TradeRepository(client).updateForCurrentTrader(
       id,
       validateUpdateTrade(input),

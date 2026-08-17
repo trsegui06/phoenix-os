@@ -1,4 +1,5 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { PhoenixSupabaseClient } from "@/lib/supabase/types";
+import type { Database } from "@/lib/supabase/database.types";
 import type {
   CreateTradingSetupInput,
   TradingSetup,
@@ -33,12 +34,15 @@ const db = (input: CreateTradingSetupInput | UpdateTradingSetupInput): Row => ({
 });
 
 export class TradingSetupRepository {
-  constructor(private readonly client: SupabaseClient) {}
+  constructor(private readonly client: PhoenixSupabaseClient) {}
 
   async create(traderId: string, input: CreateTradingSetupInput) {
     const { data, error } = await this.client
       .from("setups")
-      .insert({ ...db(input), trader_id: traderId })
+      .insert({
+        ...db(input),
+        trader_id: traderId,
+      } as Database["public"]["Tables"]["setups"]["Insert"])
       .select(columns)
       .single();
     return { setup: data ? map(data as Row) : null, error };
