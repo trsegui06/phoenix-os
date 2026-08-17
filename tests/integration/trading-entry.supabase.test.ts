@@ -157,9 +157,10 @@ describe.skipIf(!enabled)("Trading Data Entry local Supabase integration", () =>
       tradeErrorCount: 2,
       tradesWithErrorsCount: 1,
     });
+    const unsigned = createClient<Database>(url!, key!, { auth: { persistSession: false } });
     expect(
       (
-        await anon.rpc("create_trade_with_errors", {
+        await unsigned.rpc("create_trade_with_errors", {
           target_trading_account_id: ids.accountA,
           target_session_id: ids.sessionA,
           target_setup_id: ids.setupA,
