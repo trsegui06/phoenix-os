@@ -27,6 +27,40 @@ export type TradingOverview = {
   objectiveCount: number;
 };
 
+export type TradingPerformanceBreakdownMetrics = Pick<
+  TradingOverview,
+  | "totalTradeCount"
+  | "closedTradeCount"
+  | "unresolvedTradeCount"
+  | "winCount"
+  | "lossCount"
+  | "breakevenCount"
+  | "winRate"
+  | "averageRiskBasisPoints"
+  | "realizedPnlByCurrency"
+>;
+
+export type TradingSetupBreakdown = {
+  setupId: string;
+  setupName: string;
+  metrics: TradingPerformanceBreakdownMetrics;
+};
+
+export type TradingSessionTypeBreakdown = {
+  sessionType: string;
+  metrics: TradingPerformanceBreakdownMetrics;
+};
+
+export type TradingAssetBreakdown = {
+  asset: string;
+  metrics: TradingPerformanceBreakdownMetrics;
+};
+
+export type TradingErrorBreakdown = {
+  byCategory: Array<{ category: string; errorCount: number; affectedTradeCount: number }>;
+  bySeverity: Array<{ severity: string; errorCount: number; affectedTradeCount: number }>;
+};
+
 export class TradingStatisticsValidationError extends Error {
   constructor(message: string) {
     super(message);

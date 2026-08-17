@@ -559,6 +559,77 @@ export type Database = {
         Args: { target_review_id: string; target_trade_ids?: string[] };
         Returns: undefined;
       };
+      trading_error_breakdown: {
+        Args: {
+          filter_from?: string;
+          filter_to?: string;
+          filter_trading_account_id?: string;
+        };
+        Returns: {
+          affected_trade_count: string;
+          dimension: string;
+          error_count: string;
+          label: string;
+        }[];
+      };
+      trading_statistics_by_asset: {
+        Args: {
+          filter_from?: string;
+          filter_to?: string;
+          filter_trading_account_id?: string;
+        };
+        Returns: {
+          asset: string;
+          average_risk_basis_points: string;
+          breakeven_count: string;
+          closed_trade_count: string;
+          loss_count: string;
+          realized_pnl_by_currency: Json;
+          total_trade_count: string;
+          unresolved_trade_count: string;
+          win_count: string;
+          win_rate: string;
+        }[];
+      };
+      trading_statistics_by_session_type: {
+        Args: {
+          filter_from?: string;
+          filter_to?: string;
+          filter_trading_account_id?: string;
+        };
+        Returns: {
+          average_risk_basis_points: string;
+          breakeven_count: string;
+          closed_trade_count: string;
+          loss_count: string;
+          realized_pnl_by_currency: Json;
+          session_type: string;
+          total_trade_count: string;
+          unresolved_trade_count: string;
+          win_count: string;
+          win_rate: string;
+        }[];
+      };
+      trading_statistics_by_setup: {
+        Args: {
+          filter_from?: string;
+          filter_to?: string;
+          filter_trading_account_id?: string;
+        };
+        Returns: {
+          average_risk_basis_points: string;
+          breakeven_count: string;
+          closed_trade_count: string;
+          loss_count: string;
+          realized_pnl_by_currency: Json;
+          setup_id: string;
+          setup_name: string;
+          total_trade_count: string;
+          unresolved_trade_count: string;
+          win_count: string;
+          win_rate: string;
+        }[];
+      };
       trading_statistics_overview: {
         Args: {
           filter_from?: string;

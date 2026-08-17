@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { mapTradingOverviewRow } from "@/data/trading/trading-statistics-repository";
+import {
+  mapAssetBreakdown,
+  mapErrorBreakdown,
+  mapSessionTypeBreakdown,
+  mapSetupBreakdown,
+  mapTradingOverviewRow,
+} from "@/data/trading/trading-statistics-repository";
 import {
   TradingStatisticsValidationError,
   validateTradingStatisticsFilter,
@@ -139,5 +145,87 @@ describe("Trading Overview transport mapping", () => {
       to: "2026-12-31",
       tradingAccountId: accountId,
     });
+  });
+});
+
+describe("Trading Statistics Phase B mapping", () => {
+  const performance = {
+    total_trade_count: "2",
+    closed_trade_count: "1",
+    unresolved_trade_count: "1",
+    win_count: "1",
+    loss_count: "0",
+    breakeven_count: "0",
+    win_rate: "1",
+    average_risk_basis_points: "150.0000000000000000",
+    realized_pnl_by_currency: [
+      {
+        currency: "EUR",
+        realizedPnlCents: "10000",
+        averagePnlCents: "10000.000000000000",
+        grossProfitCents: "10000",
+        grossLossCents: "0",
+      },
+    ],
+  };
+
+  it("maps Setup groups and preserves the current label", () => {
+    expect(
+      mapSetupBreakdown([{ ...performance, setup_id: accountId, setup_name: "Exact Setup" }])[0],
+    ).toMatchObject({ setupId: accountId, setupName: "Exact Setup", metrics: { winRate: 1 } });
+  });
+
+  it("preserves case-distinct Session Type labels", () => {
+    expect(
+      mapSessionTypeBreakdown([
+        { ...performance, session_type: "London" },
+        { ...performance, session_type: "london" },
+      ]).map((group) => group.sessionType),
+    ).toEqual(["London", "london"]);
+  });
+
+  it("preserves case-distinct Asset labels", () => {
+    expect(
+      mapAssetBreakdown([
+        { ...performance, asset: "ES" },
+        { ...performance, asset: "es" },
+      ]).map((group) => group.asset),
+    ).toEqual(["ES", "es"]);
+  });
+
+  it("maps exact Error category and severity frequencies", () => {
+    expect(
+      mapErrorBreakdown([
+        { dimension: "category", label: "FOMO", error_count: "3", affected_trade_count: "2" },
+        { dimension: "severity", label: "High", error_count: "2", affected_trade_count: "2" },
+      ]),
+    ).toEqual({
+      byCategory: [{ category: "FOMO", errorCount: 3, affectedTradeCount: 2 }],
+      bySeverity: [{ severity: "High", errorCount: 2, affectedTradeCount: 2 }],
+    });
+  });
+
+  it("preserves all zero-state arrays", () => {
+    expect(mapSetupBreakdown([])).toEqual([]);
+    expect(mapSessionTypeBreakdown([])).toEqual([]);
+    expect(mapAssetBreakdown([])).toEqual([]);
+    expect(mapErrorBreakdown([])).toEqual({ byCategory: [], bySeverity: [] });
+  });
+
+  it("rejects unsafe counts, invalid rates, malformed money, and dimensions", () => {
+    expect(() =>
+      mapAssetBreakdown([{ ...performance, asset: "ES", total_trade_count: "9007199254740992" }]),
+    ).toThrow(/unsafe/);
+    expect(() =>
+      mapAssetBreakdown([{ ...performance, asset: "ES", win_rate: "Infinity" }]),
+    ).toThrow();
+    expect(() =>
+      mapAssetBreakdown([{ ...performance, asset: "ES", realized_pnl_by_currency: [{}] }]),
+    ).toThrow();
+    expect(() =>
+      mapErrorBreakdown([
+        { dimension: "score", label: "bad", error_count: "1", affected_trade_count: "1" },
+      ]),
+    ).toThrow(/dimension/);
   });
 });
