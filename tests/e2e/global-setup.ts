@@ -28,14 +28,67 @@ export default async function globalSetup() {
         .eq("auth_user_id", userId)
         .maybeSingle();
       if (existing.error) throw existing.error;
-      if (!existing.data) {
-        const profile = await client.from("traders").insert({
-          auth_user_id: userId,
-          name: "Phoenix E2E Trader",
-          timezone: "UTC",
-        });
+      let traderId = existing.data?.id;
+      if (!traderId) {
+        const profile = await client
+          .from("traders")
+          .insert({ auth_user_id: userId, name: "Phoenix E2E Trader", timezone: "UTC" })
+          .select("id")
+          .single();
         if (profile.error) throw profile.error;
+        traderId = profile.data.id;
       }
+      const account = await client
+        .from("trading_accounts")
+        .select("id")
+        .eq("trader_id", traderId)
+        .eq("account_name", "E2E EUR Account")
+        .maybeSingle();
+      if (account.error) throw account.error;
+      if (!account.data)
+        await client
+          .from("trading_accounts")
+          .insert({
+            trader_id: traderId,
+            broker: "Phoenix Broker",
+            account_name: "E2E EUR Account",
+            account_type: "cash",
+            currency: "EUR",
+            initial_balance_cents: 100000,
+            status: "active",
+          })
+          .throwOnError();
+      const session = await client
+        .from("sessions")
+        .select("id")
+        .eq("trader_id", traderId)
+        .eq("session_date", "2026-08-17")
+        .maybeSingle();
+      if (session.error) throw session.error;
+      if (!session.data)
+        await client
+          .from("sessions")
+          .insert({ trader_id: traderId, session_date: "2026-08-17", session_type: "regular" })
+          .throwOnError();
+      const setup = await client
+        .from("setups")
+        .select("id")
+        .eq("trader_id", traderId)
+        .eq("name", "E2E Breakout")
+        .maybeSingle();
+      if (setup.error) throw setup.error;
+      if (!setup.data)
+        await client
+          .from("setups")
+          .insert({
+            trader_id: traderId,
+            name: "E2E Breakout",
+            timeframe: "5m",
+            entry_rules: "Breakout",
+            exit_rules: "Target",
+            validation_rules: "Confirm",
+          })
+          .throwOnError();
     }
 
     const signout = await client.auth.signOut();

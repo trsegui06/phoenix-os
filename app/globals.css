@@ -9,6 +9,8 @@
 :root {
   color-scheme: dark;
   background: #0f172a;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 * {
@@ -16,6 +18,8 @@
 }
 
 body {
+  max-width: 100%;
+  overflow-x: clip;
   min-height: 100vh;
   margin: 0;
   background: radial-gradient(circle at top, rgb(249 115 22 / 12%), transparent 42%), #0f172a;

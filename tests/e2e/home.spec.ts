@@ -50,6 +50,35 @@ test("shows a generic error for invalid credentials", async ({ page }) => {
   await expect(page.getByText(/invalid login credentials/i)).toHaveCount(0);
 });
 
+test("records a Trade with multiple errors and refreshes the dashboard", async ({ page }) => {
+  await page.goto("/login");
+  await signIn(page);
+  await page.getByRole("link", { name: "New Trade" }).click();
+  await expect(page.getByRole("heading", { name: "New Trade" })).toBeVisible();
+  await page.getByLabel("Trade Date").fill("2026-08-17");
+  await page.getByLabel("Asset").fill("EURUSD");
+  await page.getByLabel("Entry Price").fill("1.1");
+  await page.getByLabel("Stop Loss").fill("1.09");
+  await page.getByLabel("Take Profit").fill("1.12");
+  await page.getByLabel("Position Size").fill("2");
+  await page.getByLabel("Risk (%)").fill("1.25");
+  await page.getByLabel("Result").fill("win");
+  await page.getByLabel(/Realized P&L/).fill("125.50");
+  for (const [category, severity, description] of [
+    ["process", "low", "Late entry"],
+    ["risk", "medium", "Wide stop"],
+  ]) {
+    await page.getByRole("button", { name: "Add Error" }).click();
+    const row = page.locator("fieldset").last().locator("div.rounded-xl").last();
+    await row.getByLabel("Category").fill(category);
+    await row.getByLabel("Severity").fill(severity);
+    await row.getByLabel("Description").fill(description);
+  }
+  await page.getByRole("button", { name: "Record Trade" }).click();
+  await expect(page).toHaveURL(/\/trading\?created=trade$/);
+  await expect(page.getByText("Trade recorded.")).toBeVisible();
+});
+
 test("redirects an authenticated user away from Login", async ({ page }) => {
   await page.goto("/login");
   await signIn(page);

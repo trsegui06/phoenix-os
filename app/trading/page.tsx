@@ -10,6 +10,7 @@ import {
 } from "@/domain/trading/trading-statistics";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { resolveCurrentTraderId } from "@/services/trading/current-trader";
 import { TradingApplicationError } from "@/services/trading/errors";
 import { listTradingAccounts } from "@/services/trading/trading-accounts";
@@ -38,7 +39,7 @@ const emptyOverview: TradingOverview = {
   objectiveCount: 0,
 };
 
-type Search = Promise<{ from?: string; to?: string; account?: string }>;
+type Search = Promise<{ from?: string; to?: string; account?: string; created?: string }>;
 
 export default async function TradingPage({ searchParams }: { searchParams: Search }) {
   const client = await getSupabaseServerClient();
@@ -52,6 +53,8 @@ export default async function TradingPage({ searchParams }: { searchParams: Sear
   const search = await searchParams;
   let filter: TradingStatisticsFilter = {};
   let notice: string | null = null;
+  let workspaceConfigured = true;
+  const created = search.created === "trade";
   try {
     filter = validateTradingStatisticsFilter({
       ...(search.from ? { from: search.from } : {}),
@@ -89,6 +92,7 @@ export default async function TradingPage({ searchParams }: { searchParams: Sear
     }
   } catch (error) {
     if (error instanceof TradingApplicationError && error.code === "TRADER_PROFILE_NOT_FOUND") {
+      workspaceConfigured = false;
       notice = "Your account is signed in, but your trading workspace is not configured yet.";
     } else {
       notice = "Trading data is unavailable right now. Please try again shortly.";
@@ -96,8 +100,8 @@ export default async function TradingPage({ searchParams }: { searchParams: Sear
   }
 
   return (
-    <main className="mx-auto min-h-screen max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-      <header className="flex items-start justify-between gap-4 border-b border-slate-800 pb-8">
+    <main className="mx-auto min-h-screen max-w-7xl overflow-x-hidden px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+      <header className="flex flex-col items-start justify-between gap-4 border-b border-slate-800 pb-8 sm:flex-row">
         <div className="flex items-start gap-4">
           <PhoenixMark />
           <div>
@@ -113,14 +117,24 @@ export default async function TradingPage({ searchParams }: { searchParams: Sear
             </p>
           </div>
         </div>
-        <form action={logout}>
-          <button
-            type="submit"
-            className="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-300 hover:border-slate-600 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-phoenix-orange"
-          >
-            Logout
-          </button>
-        </form>
+        <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+          {workspaceConfigured && (
+            <Link
+              href="/trading/new"
+              className="rounded-lg bg-phoenix-orange px-3 py-2 text-center text-sm font-semibold text-slate-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-phoenix-orange"
+            >
+              New Trade
+            </Link>
+          )}
+          <form action={logout}>
+            <button
+              type="submit"
+              className="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-300 hover:border-slate-600 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-phoenix-orange"
+            >
+              Logout
+            </button>
+          </form>
+        </div>
       </header>
 
       <div className="mt-8">
@@ -132,6 +146,14 @@ export default async function TradingPage({ searchParams }: { searchParams: Sear
           className="mt-4 rounded-xl border border-amber-900/60 bg-amber-950/30 px-4 py-3 text-sm text-amber-200"
         >
           {notice}
+        </p>
+      )}
+      {created && workspaceConfigured && (
+        <p
+          role="status"
+          className="mt-4 rounded-xl border border-emerald-900/60 bg-emerald-950/30 px-4 py-3 text-sm text-emerald-200"
+        >
+          Trade recorded.
         </p>
       )}
       <div className="mt-6">

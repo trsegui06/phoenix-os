@@ -547,6 +547,28 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      create_trade_with_errors: {
+        Args: {
+          target_asset: string;
+          target_direction: string;
+          target_entry_price: number;
+          target_errors?: Json;
+          target_execution_quality?: string;
+          target_exit_price?: number;
+          target_notes?: string;
+          target_pnl_cents?: number;
+          target_position_size: number;
+          target_result: string;
+          target_risk_basis_points: number;
+          target_session_id: string;
+          target_setup_id: string;
+          target_stop_loss: number;
+          target_take_profit: number;
+          target_trade_date: string;
+          target_trading_account_id: string;
+        };
+        Returns: string;
+      };
       is_current_trader: {
         Args: { target_trader_id: string };
         Returns: boolean;

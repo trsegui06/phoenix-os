@@ -12,7 +12,8 @@ import {
   formatRate,
 } from "@/lib/trading-statistics-format";
 
-const card = "rounded-2xl border border-slate-800 bg-slate-900/80 p-5 shadow-sm shadow-black/10";
+const card =
+  "min-w-0 rounded-2xl border border-slate-800 bg-slate-900/80 p-5 shadow-sm shadow-black/10";
 const numeric = "text-right tabular-nums";
 
 function SectionHeader({
@@ -84,7 +85,7 @@ function PerformanceTable({
         <p className="mt-4 text-sm text-slate-400">No {title.toLowerCase()} available yet.</p>
       ) : (
         <div className="mt-4 overflow-x-auto">
-          <table className="w-full min-w-[640px] text-left text-sm">
+          <table className="w-full min-w-0 text-left text-xs sm:min-w-[640px] sm:text-sm">
             <thead className="text-xs tracking-wide text-slate-500 uppercase">
               <tr>
                 <th className="pb-3">Label</th>
@@ -158,7 +159,7 @@ export function TradingDashboard({
     ["Objectives", String(overview.objectiveCount), "Trader-wide scope"],
   ];
   return (
-    <div className="grid gap-6">
+    <div className="grid min-w-0 max-w-full gap-6">
       {!overview.totalTradeCount && (
         <div className="rounded-xl border border-slate-800 bg-slate-900/60 px-5 py-4 text-sm text-slate-300">
           <strong className="font-medium text-white">No trades recorded yet.</strong> Your
@@ -245,7 +246,7 @@ export function TradingDashboard({
           <p className="mt-5 text-sm text-slate-400">No realized P&amp;L yet.</p>
         ) : (
           <div className="mt-5 overflow-x-auto">
-            <table className="w-full min-w-[680px] text-left text-sm">
+            <table className="w-full min-w-0 text-left text-xs sm:min-w-[680px] sm:text-sm">
               <thead className="text-xs text-slate-500 uppercase">
                 <tr>
                   <th className="pb-3">Currency</th>
@@ -315,12 +316,12 @@ export function TradingDashboard({
         {!errors.byCategory.length && !errors.bySeverity.length ? (
           <p className="mt-4 text-sm text-slate-400">No recorded Trade Errors.</p>
         ) : (
-          <div className="mt-5 grid gap-6 lg:grid-cols-2">
+          <div className="mt-5 grid min-w-0 gap-6 lg:grid-cols-2">
             {[
               ["By Category", errors.byCategory.map((x) => ({ label: x.category, ...x }))],
               ["By Severity", errors.bySeverity.map((x) => ({ label: x.severity, ...x }))],
             ].map(([heading, values]) => (
-              <div key={String(heading)}>
+              <div key={String(heading)} className="min-w-0 overflow-x-auto">
                 <h3 className="text-sm font-semibold text-slate-300">{String(heading)}</h3>
                 <table className="mt-3 w-full text-left text-sm">
                   <thead className="text-xs text-slate-500 uppercase">

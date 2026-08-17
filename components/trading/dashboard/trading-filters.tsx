@@ -9,11 +9,11 @@ export function TradingFilters({
   accounts: TradingAccount[];
 }) {
   const control =
-    "h-11 rounded-lg border border-slate-700 bg-slate-950/60 px-3 text-sm text-white outline-none focus:border-phoenix-orange focus:ring-2 focus:ring-orange-500/20";
+    "h-11 min-w-0 w-full rounded-lg border border-slate-700 bg-slate-950/60 px-3 text-sm text-white outline-none focus:border-phoenix-orange focus:ring-2 focus:ring-orange-500/20";
   return (
     <form
       aria-label="Trading statistics filters"
-      className="grid gap-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1.5fr_auto_auto] lg:items-end"
+      className="grid min-w-0 gap-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1.5fr_auto_auto] lg:items-end"
     >
       <label className="grid gap-2 text-xs font-semibold tracking-wide text-slate-400 uppercase">
         From
