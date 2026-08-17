@@ -7,6 +7,11 @@ import type {
 type Row = Record<string, unknown>;
 const columns =
   "id,trader_id,prop_firm_id,broker,account_name,account_type,currency,initial_balance_cents,current_balance_cents,balance_updated_at,status,created_at,updated_at";
+const cents = (value: unknown, field: string) => {
+  const parsed = typeof value === "number" ? value : Number(value);
+  if (!Number.isSafeInteger(parsed)) throw new Error(`${field} exceeds safe integer precision.`);
+  return parsed;
+};
 const map = (r: Row): TradingAccount => ({
   id: String(r.id),
   traderId: String(r.trader_id),
@@ -15,8 +20,11 @@ const map = (r: Row): TradingAccount => ({
   accountName: String(r.account_name),
   accountType: String(r.account_type),
   currency: String(r.currency),
-  initialBalanceCents: Number(r.initial_balance_cents),
-  currentBalanceCents: r.current_balance_cents === null ? null : Number(r.current_balance_cents),
+  initialBalanceCents: cents(r.initial_balance_cents, "initial_balance_cents"),
+  currentBalanceCents:
+    r.current_balance_cents === null
+      ? null
+      : cents(r.current_balance_cents, "current_balance_cents"),
   balanceUpdatedAt: r.balance_updated_at ? String(r.balance_updated_at) : null,
   status: String(r.status),
   createdAt: String(r.created_at),

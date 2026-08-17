@@ -41,6 +41,12 @@ describe("Trading Account validation", () => {
     expect(() => validateCreateTradingAccount({ ...valid, initialBalanceCents: 1.2 })).toThrow(
       TradingAccountValidationError,
     );
+    expect(() =>
+      validateCreateTradingAccount({
+        ...valid,
+        initialBalanceCents: Number.MAX_SAFE_INTEGER + 1,
+      }),
+    ).toThrow(TradingAccountValidationError);
   });
   it("enforces the balance snapshot pair", () => {
     expect(

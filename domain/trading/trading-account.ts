@@ -47,8 +47,8 @@ const text = (value: string, field: string) => {
   return result;
 };
 const cents = (value: number, field: string) => {
-  if (!Number.isInteger(value) || value < 0)
-    throw new TradingAccountValidationError(`${field} must be a non-negative integer.`);
+  if (!Number.isSafeInteger(value) || value < 0)
+    throw new TradingAccountValidationError(`${field} must be a non-negative safe integer.`);
   return value;
 };
 const code = (value: string) => {
