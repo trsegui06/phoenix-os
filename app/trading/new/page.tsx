@@ -50,12 +50,18 @@ export default async function NewTradePage() {
       <h1 className="mt-5 text-3xl font-semibold text-white">New Trade</h1>
       <p className="mt-2 text-slate-400">Record execution and reflection in one atomic entry.</p>
       {missing.length ? (
-        <p
+        <div
           role="status"
           className="mt-8 rounded-xl border border-amber-900 bg-amber-950/30 p-4 text-amber-200"
         >
-          Create {missing.join(", ")} before recording a Trade.
-        </p>
+          <p>Create {missing.join(", ")} before recording a Trade.</p>
+          <Link
+            href="/trading/settings"
+            className="mt-3 inline-block font-semibold text-phoenix-orange underline underline-offset-4"
+          >
+            Manage Trading Setup
+          </Link>
+        </div>
       ) : (
         <div className="mt-8">
           <TradeEntryForm

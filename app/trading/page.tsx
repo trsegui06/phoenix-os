@@ -120,6 +120,14 @@ export default async function TradingPage({ searchParams }: { searchParams: Sear
         <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
           {workspaceConfigured && (
             <Link
+              href="/trading/settings"
+              className="rounded-lg border border-slate-700 px-3 py-2 text-center text-sm font-medium text-slate-200 hover:border-slate-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-phoenix-orange"
+            >
+              Trading Setup
+            </Link>
+          )}
+          {workspaceConfigured && (
+            <Link
               href="/trading/new"
               className="rounded-lg bg-phoenix-orange px-3 py-2 text-center text-sm font-semibold text-slate-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-phoenix-orange"
             >
