@@ -559,6 +559,29 @@ export type Database = {
         Args: { target_review_id: string; target_trade_ids?: string[] };
         Returns: undefined;
       };
+      trading_statistics_overview: {
+        Args: {
+          filter_from?: string;
+          filter_to?: string;
+          filter_trading_account_id?: string;
+        };
+        Returns: {
+          average_risk_basis_points: string;
+          breakeven_count: string;
+          closed_trade_count: string;
+          loss_count: string;
+          objective_count: string;
+          realized_pnl_by_currency: Json;
+          review_count: string;
+          total_trade_count: string;
+          trade_error_count: string;
+          trade_error_rate: string;
+          trades_with_errors_count: string;
+          unresolved_trade_count: string;
+          win_count: string;
+          win_rate: string;
+        }[];
+      };
     };
     Enums: {
       [_ in never]: never;
