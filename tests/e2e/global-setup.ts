@@ -2,7 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/lib/supabase/database.types";
 
-import { e2eMissingProfileUser, e2eSelfServiceUser, e2eUser } from "./auth-fixture";
+import { e2eMissingProfileUser, e2eUser } from "./auth-fixture";
 
 export default async function globalSetup() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -13,17 +13,14 @@ export default async function globalSetup() {
   }
 
   const client = createClient<Database>(url, key, { auth: { persistSession: false } });
-  for (const credentials of [e2eUser, e2eMissingProfileUser, e2eSelfServiceUser]) {
+  for (const credentials of [e2eUser, e2eMissingProfileUser]) {
     const signup = await client.auth.signUp(credentials);
     if (signup.error && signup.error.code !== "user_already_exists") throw signup.error;
 
     const signin = await client.auth.signInWithPassword(credentials);
     if (signin.error) throw signin.error;
 
-    if (
-      credentials.email !== e2eMissingProfileUser.email &&
-      credentials.email !== e2eSelfServiceUser.email
-    ) {
+    if (credentials.email !== e2eMissingProfileUser.email) {
       const userId = signin.data.user.id;
       const existing = await client
         .from("traders")

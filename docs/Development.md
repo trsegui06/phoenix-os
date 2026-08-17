@@ -130,3 +130,9 @@ pnpm test:e2e
 ```
 
 The E2E setup creates disposable synthetic Auth users and one matching Trader profile through the anonymous authenticated workflow. It never uses a service-role key or a remote project. Stop local Supabase with `pnpm supabase stop --no-backup --agent no` after testing.
+
+### Local registration and recovery email testing
+
+The local Auth configuration allows email/password signup without confirmation and enforces the provider minimum of six password characters. Set `NEXT_PUBLIC_SITE_URL=http://127.0.0.1:3000` so signup and recovery use the fixed `/auth/callback` endpoint. Hosted deployments must configure the same trusted origin and callback in Supabase redirect allow-lists.
+
+Supabase CLI captures recovery and, when enabled, confirmation messages in Mailpit. Run `pnpm supabase status` and open the reported Mailpit URL (normally `http://127.0.0.1:54324`). Never configure real SMTP credentials in the repository. Production SMTP delivery, provider limits, domain configuration, monitoring, and infrastructure abuse protection remain deployment responsibilities.

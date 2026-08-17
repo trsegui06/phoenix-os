@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { e2eMissingProfileUser, e2eSelfServiceUser, e2eUser } from "./auth-fixture";
+import { e2eMissingProfileUser, e2eUser } from "./auth-fixture";
 
 test.describe.configure({ mode: "serial" });
 
@@ -21,9 +21,16 @@ test("renders the Phoenix OS foundation page", async ({ page }) => {
 test("completes the first Trade from zero prerequisites without operator intervention", async ({
   page,
 }) => {
+  const publicUser = {
+    email: `phoenix-public-${Date.now()}@example.test`,
+    password: "Phoenix-public-123!",
+  };
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/login");
-  await signIn(page, e2eSelfServiceUser);
+  await page.goto("/register");
+  await page.getByLabel("Email").fill(publicUser.email);
+  await page.getByLabel("Password", { exact: true }).fill(publicUser.password);
+  await page.getByLabel("Confirm password").fill(publicUser.password);
+  await page.getByRole("button", { name: "Create account" }).click();
   await expect(page).toHaveURL(/\/onboarding$/);
   await page.getByLabel("Name").fill("Self-Service Trader");
   await page.getByLabel("Timezone").fill("Europe/Paris");
@@ -95,6 +102,9 @@ test("completes the first Trade from zero prerequisites without operator interve
   await expect(page).toHaveURL(/\/trading\?created=trade$/);
   await expect(page.getByText("Trade recorded.")).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await page.getByRole("button", { name: "Logout" }).click();
+  await signIn(page, publicUser);
+  await expect(page).toHaveURL(/\/trading$/);
 });
 
 test("protects Trading, creates a session, logs out, and destroys the session", async ({
@@ -212,4 +222,70 @@ test("keeps Login and authenticated Trading usable at required viewports", async
       viewport.width,
     );
   }
+});
+
+test("rejects reset access without a verified recovery flow", async ({ page }) => {
+  await page.goto("/reset-password");
+  await expect(page.getByRole("alert")).toHaveText("This recovery link is invalid or has expired.");
+  await expect(page.getByRole("link", { name: "Request a new reset email" })).toBeVisible();
+});
+
+test("recovers a password through the local email and rejects the old password", async ({
+  page,
+  request,
+}) => {
+  test.setTimeout(60_000);
+  const newPassword = "Phoenix-recovered-456!";
+  await page.goto("/forgot-password");
+  await page.getByLabel("Email").fill(e2eUser.email);
+  await page.getByRole("button", { name: "Send reset instructions" }).click();
+  await expect(page.getByRole("status")).toContainText("If an account exists");
+
+  const findRecoveryMessage = async () => {
+    const response = await request.get("http://127.0.0.1:54324/api/v1/messages");
+    const body = (await response.json()) as {
+      messages?: Array<{ ID: string; To?: Array<{ Address?: string }> }>;
+    };
+    return body.messages?.find((message) =>
+      message.To?.some((recipient) => recipient.Address === e2eUser.email),
+    )?.ID;
+  };
+  await expect.poll(findRecoveryMessage).toBeTruthy();
+  const messageId = await findRecoveryMessage();
+  const message = await request.get(`http://127.0.0.1:54324/api/v1/message/${messageId}`);
+  const body = (await message.json()) as { HTML?: string; Text?: string };
+  const recoveryUrl = (body.HTML ?? body.Text ?? "")
+    .replaceAll("&amp;", "&")
+    .match(/https?:\/\/[^"'<>\s]+/)?.[0];
+  expect(recoveryUrl).toBeTruthy();
+  await page.goto(recoveryUrl!);
+  await expect(page).toHaveURL(/\/reset-password\?recovery=authorized$/);
+  const recoveryCookies = await page.context().cookies();
+  const recoveryCookieNames = recoveryCookies.map((cookie) => cookie.name);
+  expect(recoveryCookieNames).toContain("phoenix-recovery-authorized");
+  expect(recoveryCookieNames).toContain("sb-127-auth-token");
+  const currentHost = new URL(page.url()).hostname;
+  expect(
+    recoveryCookies
+      .filter((cookie) =>
+        ["phoenix-recovery-authorized", "sb-127-auth-token"].includes(cookie.name),
+      )
+      .map((cookie) => ({ name: cookie.name, domain: cookie.domain })),
+  ).toEqual(
+    expect.arrayContaining([
+      { name: "phoenix-recovery-authorized", domain: currentHost },
+      { name: "sb-127-auth-token", domain: currentHost },
+    ]),
+  );
+  await page.getByLabel("New Password", { exact: true }).fill(newPassword);
+  await page.getByLabel("Confirm new password").fill(newPassword);
+  await page.getByRole("button", { name: "Update password" }).click();
+  await expect(page).toHaveURL(/\/login\?reset=success$/);
+
+  await signIn(page, e2eUser);
+  await expect(page.locator('p[role="alert"]')).toHaveText("Email or password is incorrect.");
+  await page.getByLabel("Email").fill(e2eUser.email);
+  await page.getByLabel("Password").fill(newPassword);
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(page).toHaveURL(/\/trading$/);
 });
