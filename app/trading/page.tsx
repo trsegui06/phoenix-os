@@ -1,4 +1,5 @@
 import { PhoenixMark } from "@/components/ui/phoenix-mark";
+import { logout } from "@/app/actions/auth";
 import { TradingDashboard } from "@/components/trading/dashboard/trading-dashboard";
 import { TradingFilters } from "@/components/trading/dashboard/trading-filters";
 import {
@@ -8,6 +9,9 @@ import {
   validateTradingStatisticsFilter,
 } from "@/domain/trading/trading-statistics";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+import { resolveCurrentTraderId } from "@/services/trading/current-trader";
+import { TradingApplicationError } from "@/services/trading/errors";
 import { listTradingAccounts } from "@/services/trading/trading-accounts";
 import {
   getTradingAssetBreakdown,
@@ -37,6 +41,14 @@ const emptyOverview: TradingOverview = {
 type Search = Promise<{ from?: string; to?: string; account?: string }>;
 
 export default async function TradingPage({ searchParams }: { searchParams: Search }) {
+  const client = await getSupabaseServerClient();
+  if (!client) redirect("/login");
+
+  const {
+    data: { user },
+  } = await client.auth.getUser();
+  if (!user) redirect("/login");
+
   const search = await searchParams;
   let filter: TradingStatisticsFilter = {};
   let notice: string | null = null;
@@ -51,7 +63,6 @@ export default async function TradingPage({ searchParams }: { searchParams: Sear
       notice = "Those filters were invalid, so the dashboard was reset.";
   }
 
-  const client = await getSupabaseServerClient();
   let accounts: Awaited<ReturnType<typeof listTradingAccounts>> = [];
   let overview = emptyOverview;
   let setups: Awaited<ReturnType<typeof getTradingSetupBreakdown>> = [];
@@ -62,7 +73,8 @@ export default async function TradingPage({ searchParams }: { searchParams: Sear
     bySeverity: [],
   };
 
-  if (client) {
+  try {
+    await resolveCurrentTraderId(client);
     try {
       [accounts, overview, setups, sessions, assets, errors] = await Promise.all([
         listTradingAccounts(client),
@@ -75,24 +87,40 @@ export default async function TradingPage({ searchParams }: { searchParams: Sear
     } catch {
       notice = "Trading data is unavailable right now. Please try again shortly.";
     }
+  } catch (error) {
+    if (error instanceof TradingApplicationError && error.code === "TRADER_PROFILE_NOT_FOUND") {
+      notice = "Your account is signed in, but your trading workspace is not configured yet.";
+    } else {
+      notice = "Trading data is unavailable right now. Please try again shortly.";
+    }
   }
 
   return (
     <main className="mx-auto min-h-screen max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-      <header className="flex items-start gap-4 border-b border-slate-800 pb-8">
-        <PhoenixMark />
-        <div>
-          <p className="text-xs font-semibold tracking-[0.2em] text-phoenix-orange uppercase">
-            Trading cockpit
-          </p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-            Trading Dashboard
-          </h1>
-          <p className="mt-2 text-base text-slate-300">Process before performance.</p>
-          <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
-            Track execution, risk, consistency and learning from your real trading data.
-          </p>
+      <header className="flex items-start justify-between gap-4 border-b border-slate-800 pb-8">
+        <div className="flex items-start gap-4">
+          <PhoenixMark />
+          <div>
+            <p className="text-xs font-semibold tracking-[0.2em] text-phoenix-orange uppercase">
+              Trading cockpit
+            </p>
+            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+              Trading Dashboard
+            </h1>
+            <p className="mt-2 text-base text-slate-300">Process before performance.</p>
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
+              Track execution, risk, consistency and learning from your real trading data.
+            </p>
+          </div>
         </div>
+        <form action={logout}>
+          <button
+            type="submit"
+            className="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-300 hover:border-slate-600 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-phoenix-orange"
+          >
+            Logout
+          </button>
+        </form>
       </header>
 
       <div className="mt-8">

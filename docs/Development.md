@@ -20,10 +20,10 @@ Copy `.env.example` to `.env.local` only when Supabase is required. Never commit
 
 | Variable | Required now | Purpose |
 | --- | --- | --- |
-| `NEXT_PUBLIC_SUPABASE_URL` | No | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | No | Public browser key; never use a service-role key |
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes for authentication | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Yes for authentication | Public browser key; never use a service-role key |
 
-The application starts without these variables while no data layer is implemented.
+Without these variables, authenticated routes redirect to `/login` and the login screen reports that authentication is not configured. No authenticated state is simulated.
 
 ## Commands
 
@@ -115,3 +115,18 @@ pnpm supabase stop --no-backup --agent no
 `supabase db reset --local` destroys and recreates the local database, then applies `0001`, `0002`, and later migrations from the junction. It must never be used with `--linked` for this workflow. Do not run `supabase link`, `supabase db push`, or a remote reset during local validation.
 
 With local Supabase running and all migrations applied, regenerate the checked-in public database types with `pnpm db:types`. The generated `lib/supabase/database.types.ts` file is infrastructure output: do not hand-edit it or use it as a domain model. Regenerate it after every database migration and include the resulting diff in the same change.
+
+### Local authentication UI testing
+
+With local Supabase running, expose only its local URL and anonymous/publishable key to the application and tests:
+
+```powershell
+$env:NEXT_PUBLIC_SUPABASE_URL = "http://127.0.0.1:54321"
+$env:NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "<local anon key from supabase status>"
+$env:PHOENIX_SUPABASE_URL = $env:NEXT_PUBLIC_SUPABASE_URL
+$env:PHOENIX_SUPABASE_ANON_KEY = $env:NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+pnpm test
+pnpm test:e2e
+```
+
+The E2E setup creates disposable synthetic Auth users and one matching Trader profile through the anonymous authenticated workflow. It never uses a service-role key or a remote project. Stop local Supabase with `pnpm supabase stop --no-backup --agent no` after testing.
