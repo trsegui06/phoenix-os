@@ -2,8 +2,8 @@
 
 ## Prerequisites
 
-- Node.js 24 or newer
-- pnpm 11 or newer
+- Node.js 24.14.0 exactly
+- pnpm 11.16.0 exactly, as declared by `packageManager`
 - A Supabase project is optional until a domain requiring persistence is implemented
 
 ## Installation
@@ -136,3 +136,23 @@ The E2E setup creates disposable synthetic Auth users and one matching Trader pr
 The local Auth configuration allows email/password signup without confirmation and enforces the provider minimum of six password characters. Set `NEXT_PUBLIC_SITE_URL=http://127.0.0.1:3000` so signup and recovery use the fixed `/auth/callback` endpoint. Hosted deployments must configure the same trusted origin and callback in Supabase redirect allow-lists.
 
 Supabase CLI captures recovery and, when enabled, confirmation messages in Mailpit. Run `pnpm supabase status` and open the reported Mailpit URL (normally `http://127.0.0.1:54324`). Never configure real SMTP credentials in the repository. Production SMTP delivery, provider limits, domain configuration, monitoring, and infrastructure abuse protection remain deployment responsibilities.
+
+## Continuous integration
+
+`.github/workflows/ci.yml` runs on pull requests and pushes to `main`, with read-only repository permissions and no production secrets. The stable checks intended for future branch protection are `Quality`, `Unit Tests`, `Supabase Integration`, `E2E`, and `Build & Security`.
+
+Every job installs Node 24.14.0 and pnpm 11.16.0, prints both versions, asserts exact matches, and performs a frozen install. Local parity for the non-Docker gates is:
+
+```bash
+pnpm install --frozen-lockfile
+pnpm format:check
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm build
+pnpm audit --prod --audit-level high
+```
+
+The integration and E2E jobs create a Linux symlink from `supabase/migrations` to the versioned `database/migrations`, then start only a disposable local Supabase stack. Integration performs a clean reset/replay, runs the live Auth/RLS/RPC suites, regenerates database types, and fails if `lib/supabase/database.types.ts` changes. E2E uses the same local Auth boundary and Mailpit; it never contacts remote Supabase or SMTP. Playwright diagnostics are retained for seven days only when E2E fails.
+
+CI does not deploy, link a Supabase project, push migrations remotely, or receive production credentials. On Windows, keep using the local junction documented above; on Linux, use the equivalent relative symbolic link.

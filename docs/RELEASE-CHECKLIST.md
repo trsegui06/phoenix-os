@@ -7,11 +7,14 @@ Every item requires a named owner, timestamp, and evidence link. Any unchecked H
 - [ ] Feature freeze declared; candidate commit recorded and tagged.
 - [ ] Worktree clean; candidate is on `main` through reviewed PR.
 - [ ] `main` protection and required status checks are enabled and evidenced.
+- [ ] GitHub Actions run for the candidate is green: `Quality`, `Unit Tests`, `Supabase Integration`, `E2E`, and `Build & Security`.
+- [ ] Those five stable check names are configured as required checks before merge/release.
 - [ ] CI uses Node 24.14.0 and pnpm 11.16.0 (or the manifest is intentionally updated in a separate reviewed change).
 - [ ] `pnpm install --frozen-lockfile` passes without engine mismatch.
 - [ ] `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:e2e`, and `pnpm build` pass.
 - [ ] `pnpm audit --prod` passes at the agreed severity threshold.
 - [ ] Secret scanning passes and no generated `.next`, test, Supabase temp, env, log, or credential artifact is tracked.
+- [ ] Branch protection evidence confirms PR review policy, direct-push policy, force-push prohibition, and deletion prohibition; do not infer these settings from a green workflow.
 
 ## Web deployment
 

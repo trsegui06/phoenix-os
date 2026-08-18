@@ -10,4 +10,5 @@ playwright-report
 pnpm-lock.yaml
 README.md
 Sprints/
+supabase/.temp
 test-results
