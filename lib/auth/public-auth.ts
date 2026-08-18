@@ -26,13 +26,20 @@ export function validateNewPassword(passwordValue: unknown, confirmValue: unknow
 
 export function trustedSiteUrl() {
   const configured = process.env.NEXT_PUBLIC_SITE_URL;
-  if (configured) {
-    const url = new URL(configured);
-    if (url.protocol !== "https:" && url.hostname !== "127.0.0.1" && url.hostname !== "localhost")
-      throw new Error("NEXT_PUBLIC_SITE_URL must use HTTPS outside local development.");
-    return url.origin;
+  if (!configured) {
+    if (process.env.NODE_ENV === "production")
+      throw new Error("NEXT_PUBLIC_SITE_URL is required in production.");
+    return "http://127.0.0.1:3000";
   }
-  return "http://127.0.0.1:3000";
+  const url = new URL(configured);
+  const local = url.hostname === "127.0.0.1" || url.hostname === "localhost";
+  if (url.username || url.password || url.search || url.hash || url.pathname !== "/")
+    throw new Error("NEXT_PUBLIC_SITE_URL must be an origin without credentials or a path.");
+  if (url.protocol !== "https:" && !local)
+    throw new Error("NEXT_PUBLIC_SITE_URL must use HTTPS outside local development.");
+  if (process.env.NODE_ENV === "production" && (url.protocol !== "https:" || local))
+    throw new Error("Production requires a non-local HTTPS NEXT_PUBLIC_SITE_URL.");
+  return url.origin;
 }
 
 export function recoveryStateMatches(expected: string, received: string) {

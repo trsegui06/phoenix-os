@@ -22,8 +22,11 @@ Copy `.env.example` to `.env.local` only when Supabase is required. Never commit
 | --- | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | Yes for authentication | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Yes for authentication | Public browser key; never use a service-role key |
+| `NEXT_PUBLIC_SITE_URL` | Yes for hosted Auth | Exact trusted application origin used for confirmation and recovery callbacks |
 
 Without these variables, authenticated routes redirect to `/login` and the login screen reports that authentication is not configured. No authenticated state is simulated.
+
+Local development may use HTTP only on `localhost` or `127.0.0.1`. Production requires explicit non-local HTTPS Site and Supabase origins. See `docs/DEPLOYMENT.md` for Preview/Production isolation, promotion, and secret handling.
 
 ## Commands
 

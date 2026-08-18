@@ -25,6 +25,12 @@ Every item requires a named owner, timestamp, and evidence link. Any unchecked H
 - [ ] No service-role, database password, SMTP password, or management token is browser-visible.
 - [ ] CSP, frame protection, MIME sniffing protection, Referrer-Policy, and Permissions-Policy verified over HTTPS.
 - [ ] Deployment artifact/commit is identifiable and rollback or traffic-disable procedure tested.
+- [ ] Vercel production-domain auto-assignment is disabled until protected `main` and required checks are evidenced; promotion is manual and owned.
+- [ ] Stable staging HTTPS origin is assigned for full Auth validation; ephemeral previews do not broaden production redirect rules.
+- [ ] Preview contains synthetic-only data and uses a dedicated non-production Supabase project.
+- [ ] Preview and Production variable scopes/project references are independently checked and recorded before each promotion.
+- [ ] Vercel build logs record Node 24.x and pnpm 11.16.0; the Release Owner accepts any Node patch difference from CI 24.14.0.
+- [ ] Preview and production smoke records cover registration, confirmation, login, onboarding, settings, trade, dashboard, logout/login, and recovery.
 
 ## Supabase and database
 
@@ -32,7 +38,7 @@ Every item requires a named owner, timestamp, and evidence link. Any unchecked H
 - [ ] Production network/access controls, owners, MFA and least-privilege dashboard access reviewed.
 - [ ] Backup frequency/retention/plan limits recorded; pre-release snapshot taken where supported.
 - [ ] Restore drill into non-production completed; measured RPO/RTO recorded.
-- [ ] Migrations `0001`–`0007` applied in order to preview and their ledger captured.
+- [ ] Migrations `0001`–`0008` applied in order to preview and their ledger captured.
 - [ ] Preview RLS confirms all 11 public tables enabled and cross-tenant/anonymous tests pass.
 - [ ] All `SECURITY DEFINER` functions have fixed empty search path, qualified objects, internal ownership derivation, and only required execute grants.
 - [ ] Unused `anon`/`authenticated` table privileges, including `TRUNCATE`, `TRIGGER`, and `REFERENCES`, explicitly revoked and regression-tested.
