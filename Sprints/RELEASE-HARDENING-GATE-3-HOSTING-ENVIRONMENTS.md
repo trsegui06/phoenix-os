@@ -6,7 +6,7 @@
 
 **Feature freeze:** Active
 
-**Gate result:** **PENDING REMOTE CI / PARTIALLY CLOSED** — repository architecture and runtime origin safeguards are implemented, but no preview deployment, owned canonical domain, HTTPS endpoint, or hosted environment separation has been provisioned.
+**Gate result:** **PASS / B-01 PARTIALLY CLOSED** — repository architecture and runtime origin safeguards are implemented, and all five checks passed in [Phoenix Release Gates run 32161225141](https://github.com/trsegui06/phoenix-os/actions/runs/32161225141). No preview deployment, owned canonical domain, HTTPS endpoint, or hosted environment separation has been provisioned.
 
 ## B-01 baseline
 
@@ -46,7 +46,7 @@ Vercel supports Node `24.x`, not an exact patch; its current patch advances auto
 - environment validation unit tests;
 - local Supabase functional and browser regression;
 - production build and dependency audit;
-- remote GitHub five-gate result to be recorded after push.
+- remote Quality, Unit Tests, Supabase Integration, E2E, and Build & Security: PASS.
 
 ## Proof still missing / operator decisions
 
@@ -71,4 +71,3 @@ Vercel supports Node `24.x`, not an exact patch; its current patch advances auto
 | B-04 | PARTIALLY CLOSED | PARTIALLY CLOSED — CI green; `main` remains unprotected |
 
 B-01 cannot be called closed until a preview is deployed, domain/TLS and scoped variables are evidenced, and no preview-to-production Supabase cross-wiring is proven. No remote platform or database was created or mutated in this gate.
-
