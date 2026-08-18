@@ -1,7 +1,9 @@
 # Phoenix OS — Release Hardening Gate 1: CI & Repository Controls
 
-**Baseline:** `114e270 docs: audit public MVP release readiness`  
-**Scope:** B-04 CI/release controls and B-11 toolchain enforcement only  
+**Baseline:** `114e270 docs: audit public MVP release readiness`
+
+**Scope:** B-04 CI/release controls and B-11 toolchain enforcement only
+
 **Feature freeze:** Active
 
 ## CI architecture
