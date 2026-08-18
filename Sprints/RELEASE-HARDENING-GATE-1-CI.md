@@ -6,6 +6,8 @@
 
 **Feature freeze:** Active
 
+**Gate result:** **PARTIALLY CLOSED** — remote run [Phoenix Release Gates #32084930631](https://github.com/trsegui06/phoenix-os/actions/runs/32084930631) passed all five checks on commit `4c07d2b`; `main` remains unprotected.
+
 ## CI architecture
 
 `Phoenix Release Gates` runs for every pull request and every push to `main`. It has explicit `contents: read` permissions, no deployment capability, no production secrets, bounded job timeouts, and branch-aware concurrency: obsolete non-main runs are cancelled while active `main` validation is retained.
