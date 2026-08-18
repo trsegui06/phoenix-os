@@ -36,6 +36,9 @@ Every item requires a named owner, timestamp, and evidence link. Any unchecked H
 - [ ] Preview RLS confirms all 11 public tables enabled and cross-tenant/anonymous tests pass.
 - [ ] All `SECURITY DEFINER` functions have fixed empty search path, qualified objects, internal ownership derivation, and only required execute grants.
 - [ ] Unused `anon`/`authenticated` table privileges, including `TRUNCATE`, `TRIGGER`, and `REFERENCES`, explicitly revoked and regression-tested.
+- [ ] Candidate contains the forward-only least-privilege migration and its live catalog test covers every Phoenix public table.
+- [ ] Candidate CI proves RLS/RPC behavior, onboarding and CRUD/atomic flows after privilege hardening.
+- [ ] Database type regeneration after the privilege-only migration produces no committed diff.
 - [ ] Identical reviewed migrations applied to production by the named migration owner.
 - [ ] No reset, ad-hoc dashboard schema edit, or destructive rollback command used.
 
