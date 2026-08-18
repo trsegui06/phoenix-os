@@ -15,6 +15,29 @@ import {
 const url = process.env.PHOENIX_SUPABASE_URL;
 const key = process.env.PHOENIX_SUPABASE_ANON_KEY;
 
+const wait = (milliseconds: number) =>
+  new Promise((resolve) => {
+    setTimeout(resolve, milliseconds);
+  });
+
+async function insertTrader(
+  client: ReturnType<typeof createClient<Database>>,
+  trader: Database["public"]["Tables"]["traders"]["Insert"],
+) {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const result = await client.from("traders").insert(trader);
+    if (
+      result.error?.code !== "PGRST303" ||
+      !result.error.message.includes("JWT issued at future") ||
+      attempt === 2
+    ) {
+      return result.error;
+    }
+    await wait(1_000);
+  }
+  throw new Error("Unreachable Trader insert retry state.");
+}
+
 async function code(promise: Promise<unknown>) {
   try {
     await promise;
@@ -60,24 +83,20 @@ describe.skipIf(!url || !key)("Trading Statistics Phase B local Supabase integra
     const trades = Array.from({ length: 5 }, () => randomUUID());
 
     expect(
-      (
-        await A.from("traders").insert({
-          id: traderA,
-          auth_user_id: authA.data.user!.id,
-          name: "A",
-          timezone: "UTC",
-        })
-      ).error,
+      await insertTrader(A, {
+        id: traderA,
+        auth_user_id: authA.data.user!.id,
+        name: "A",
+        timezone: "UTC",
+      }),
     ).toBeNull();
     expect(
-      (
-        await B.from("traders").insert({
-          id: traderB,
-          auth_user_id: authB.data.user!.id,
-          name: "B",
-          timezone: "UTC",
-        })
-      ).error,
+      await insertTrader(B, {
+        id: traderB,
+        auth_user_id: authB.data.user!.id,
+        name: "B",
+        timezone: "UTC",
+      }),
     ).toBeNull();
     expect(
       (
