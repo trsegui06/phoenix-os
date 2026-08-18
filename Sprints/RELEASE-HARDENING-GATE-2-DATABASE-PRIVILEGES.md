@@ -6,7 +6,7 @@
 
 **Feature freeze:** Active
 
-**Gate result:** **PENDING REMOTE CI** — local migration, catalog and functional regression are green; B-08 closes only after all five remote release checks pass.
+**Gate result:** **PASS** — local migration, catalog and functional regression are green, and all five remote release checks passed in [Phoenix Release Gates run 32158135980](https://github.com/trsegui06/phoenix-os/actions/runs/32158135980).
 
 ## Baseline evidence
 
@@ -85,15 +85,18 @@ The existing Supabase Integration job discovers this test automatically.
 - Playwright against a freshly reset local stack: 10/10 PASS;
 - format, lint, TypeScript, and production build: PASS;
 - production dependency audit: no known vulnerabilities.
+- remote Quality, Unit Tests, Supabase Integration, E2E, and Build & Security: PASS.
 
 Local execution used Node `24.19.0` and pnpm `11.19.0`; the release workflow remains the authority for the pinned Node `24.14.0` and pnpm `11.16.0` toolchain.
+
+The first remote integration run exposed a transient `PGRST303: JWT issued at future` clock skew between local Supabase services. The statistics breakdown fixture now retries only that exact initial JWT-timing rejection for up to two seconds; every privilege, RLS, RPC, and other persistence error still fails immediately. The replacement run passed all five gates.
 
 ## B-08 decision
 
 | State | Result |
 | --- | --- |
 | Previous | OPEN / HIGH |
-| Current | PENDING REMOTE CI |
+| Current | CLOSED |
 | Closure rule | CLOSED only after Quality, Unit Tests, Supabase Integration, E2E, and Build & Security are green remotely |
 
 No product behavior, business rule, Auth flow, historical migration, or service-role dependency changed.
