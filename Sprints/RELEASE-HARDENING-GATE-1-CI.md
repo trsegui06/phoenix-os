@@ -6,7 +6,7 @@
 
 **Feature freeze:** Active
 
-**Gate result:** **PARTIALLY CLOSED** — remote run [Phoenix Release Gates #32084930631](https://github.com/trsegui06/phoenix-os/actions/runs/32084930631) passed all five checks on commit `4c07d2b`; `main` remains unprotected.
+**Gate result:** **PARTIALLY CLOSED** — remote run [Phoenix Release Gates #32084930631](https://github.com/trsegui06/phoenix-os/actions/runs/32084930631) passed all five checks on commit `4c07d2b`; `main` remains unprotected. A later runner exposed an Azure Ubuntu mirror stall during Playwright dependency installation; CI now selects the canonical Ubuntu mirror before the official `--with-deps` installation.
 
 ## CI architecture
 

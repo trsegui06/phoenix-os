@@ -143,6 +143,11 @@ jobs:
           test "$(pnpm --version)" = "${PNPM_VERSION}"
       - name: Frozen install
         run: pnpm install --frozen-lockfile
+      - name: Use canonical Ubuntu package mirror
+        run: |
+          if [ -f /etc/apt/sources.list.d/ubuntu.sources ]; then
+            sudo sed -i 's|http://azure.archive.ubuntu.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' /etc/apt/sources.list.d/ubuntu.sources
+          fi
       - name: Install Chromium
         run: pnpm exec playwright install --with-deps chromium
       - name: Bridge versioned migrations
