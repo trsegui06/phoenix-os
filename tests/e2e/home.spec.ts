@@ -13,6 +13,42 @@ async function signIn(
   await page.getByRole("button", { name: "Sign in" }).click();
 }
 
+async function requestRecoveryEmail(
+  page: import("@playwright/test").Page,
+  request: import("@playwright/test").APIRequestContext,
+  email: string,
+) {
+  const listMessages = async () => {
+    const response = await request.get("http://127.0.0.1:54324/api/v1/messages");
+    const body = (await response.json()) as {
+      messages?: Array<{ ID: string; To?: Array<{ Address?: string }> }>;
+    };
+    return body.messages ?? [];
+  };
+  const previousIds = new Set((await listMessages()).map((message) => message.ID));
+
+  await page.goto("/forgot-password");
+  await page.getByLabel("Email").fill(email);
+  await page.getByRole("button", { name: "Send reset instructions" }).click();
+  await expect(page.getByRole("status")).toContainText("If an account exists");
+
+  const findNewRecoveryMessage = async () =>
+    (await listMessages()).find(
+      (message) =>
+        !previousIds.has(message.ID) &&
+        message.To?.some((recipient) => recipient.Address === email),
+    )?.ID;
+  await expect.poll(findNewRecoveryMessage).toBeTruthy();
+  const messageId = await findNewRecoveryMessage();
+  const message = await request.get(`http://127.0.0.1:54324/api/v1/message/${messageId}`);
+  const body = (await message.json()) as { HTML?: string; Text?: string };
+  const recoveryUrl = (body.HTML ?? body.Text ?? "")
+    .replaceAll("&amp;", "&")
+    .match(/https?:\/\/[^"'<>\s]+/)?.[0];
+  expect(recoveryUrl).toBeTruthy();
+  return recoveryUrl!;
+}
+
 test("renders the Phoenix OS foundation page", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Phoenix OS" })).toBeVisible();
@@ -230,41 +266,24 @@ test("rejects reset access without a verified recovery flow", async ({ page }) =
   await expect(page.getByRole("link", { name: "Request a new reset email" })).toBeVisible();
 });
 
-test("recovers a password through the local email and rejects the old password", async ({
+test("recovers a password across browsers, rejects replay, and keeps same-browser recovery", async ({
+  browser,
   page,
   request,
 }) => {
   test.setTimeout(60_000);
   const newPassword = "Phoenix-recovered-456!";
-  await page.goto("/forgot-password");
-  await page.getByLabel("Email").fill(e2eUser.email);
-  await page.getByRole("button", { name: "Send reset instructions" }).click();
-  await expect(page.getByRole("status")).toContainText("If an account exists");
+  const recoveryUrl = await requestRecoveryEmail(page, request, e2eUser.email);
 
-  const findRecoveryMessage = async () => {
-    const response = await request.get("http://127.0.0.1:54324/api/v1/messages");
-    const body = (await response.json()) as {
-      messages?: Array<{ ID: string; To?: Array<{ Address?: string }> }>;
-    };
-    return body.messages?.find((message) =>
-      message.To?.some((recipient) => recipient.Address === e2eUser.email),
-    )?.ID;
-  };
-  await expect.poll(findRecoveryMessage).toBeTruthy();
-  const messageId = await findRecoveryMessage();
-  const message = await request.get(`http://127.0.0.1:54324/api/v1/message/${messageId}`);
-  const body = (await message.json()) as { HTML?: string; Text?: string };
-  const recoveryUrl = (body.HTML ?? body.Text ?? "")
-    .replaceAll("&amp;", "&")
-    .match(/https?:\/\/[^"'<>\s]+/)?.[0];
-  expect(recoveryUrl).toBeTruthy();
-  await page.goto(recoveryUrl!);
-  await expect(page).toHaveURL(/\/reset-password\?recovery=authorized$/);
-  const recoveryCookies = await page.context().cookies();
+  const freshContext = await browser.newContext();
+  const freshPage = await freshContext.newPage();
+  await freshPage.goto(recoveryUrl);
+  await expect(freshPage).toHaveURL(/\/reset-password\?recovery=authorized$/);
+  const recoveryCookies = await freshContext.cookies();
   const recoveryCookieNames = recoveryCookies.map((cookie) => cookie.name);
   expect(recoveryCookieNames).toContain("phoenix-recovery-authorized");
   expect(recoveryCookieNames).toContain("sb-127-auth-token");
-  const currentHost = new URL(page.url()).hostname;
+  const currentHost = new URL(freshPage.url()).hostname;
   expect(
     recoveryCookies
       .filter((cookie) =>
@@ -277,15 +296,46 @@ test("recovers a password through the local email and rejects the old password",
       { name: "sb-127-auth-token", domain: currentHost },
     ]),
   );
-  await page.getByLabel("New Password", { exact: true }).fill(newPassword);
-  await page.getByLabel("Confirm new password").fill(newPassword);
-  await page.getByRole("button", { name: "Update password" }).click();
-  await expect(page).toHaveURL(/\/login\?reset=success$/);
+  await freshPage.getByLabel("New Password", { exact: true }).fill(newPassword);
+  await freshPage.getByLabel("Confirm new password").fill(newPassword);
+  await freshPage.getByRole("button", { name: "Update password" }).click();
+  await expect(freshPage).toHaveURL(/\/login\?reset=success$/);
 
+  const replayContext = await browser.newContext();
+  const replayPage = await replayContext.newPage();
+  await replayPage.goto(recoveryUrl);
+  await expect(replayPage).toHaveURL(/\/forgot-password\?recovery=invalid$/);
+  await expect(replayPage.getByRole("alert")).toHaveText(
+    "This recovery link is invalid or has expired.",
+  );
+  await replayContext.close();
+
+  await page.goto("/login");
   await signIn(page, e2eUser);
   await expect(page.locator('p[role="alert"]')).toHaveText("Email or password is incorrect.");
+  await freshPage.getByLabel("Email").fill(e2eUser.email);
+  await freshPage.getByLabel("Password").fill(newPassword);
+  await freshPage.getByRole("button", { name: "Sign in" }).click();
+  await expect(freshPage).toHaveURL(/\/trading$/);
+  await freshContext.close();
+
+  const sameBrowserPassword = "Phoenix-same-browser-789!";
+  const sameBrowserUrl = await requestRecoveryEmail(page, request, e2eUser.email);
+  await page.goto(sameBrowserUrl);
+  await expect(page).toHaveURL(/\/reset-password\?recovery=authorized$/);
+  await page.getByLabel("New Password", { exact: true }).fill(sameBrowserPassword);
+  await page.getByLabel("Confirm new password").fill(sameBrowserPassword);
+  await page.getByRole("button", { name: "Update password" }).click();
+  await expect(page).toHaveURL(/\/login\?reset=success$/);
   await page.getByLabel("Email").fill(e2eUser.email);
-  await page.getByLabel("Password").fill(newPassword);
+  await page.getByLabel("Password").fill(sameBrowserPassword);
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page).toHaveURL(/\/trading$/);
+});
+
+test("rejects malformed recovery tokens without exposing provider errors", async ({ page }) => {
+  await page.goto("/auth/recovery?token_hash=malformed&type=recovery");
+  await expect(page).toHaveURL(/\/forgot-password\?recovery=invalid$/);
+  await expect(page.getByRole("alert")).toHaveText("This recovery link is invalid or has expired.");
+  await expect(page).not.toHaveURL(/token_hash/);
 });

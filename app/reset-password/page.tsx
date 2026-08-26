@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 
 import { AuthShell } from "@/components/auth/auth-shell";
 import { ResetPasswordForm } from "@/components/auth/public-auth-forms";
+import { getSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +12,13 @@ export default async function ResetPasswordPage({
 }: {
   searchParams: Promise<{ recovery?: string }>;
 }) {
-  const authorized = (await searchParams).recovery === "authorized";
+  const store = await cookies();
+  const client = await getSupabaseServerClient();
+  const user = client ? (await client.auth.getUser()).data.user : null;
+  const authorized =
+    (await searchParams).recovery === "authorized" &&
+    store.get("phoenix-recovery-authorized")?.value === "1" &&
+    Boolean(user);
   return (
     <AuthShell
       title="Choose a new password."

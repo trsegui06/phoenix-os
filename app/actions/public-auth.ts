@@ -1,6 +1,5 @@
 "use server";
 
-import { randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -47,17 +46,8 @@ export async function requestPasswordReset(
     return { message: "Check the highlighted field.", fieldErrors: { email: result.email } };
   const client = await getSupabaseServerClient();
   if (!client) return { message: "Authentication is not configured for this environment." };
-  const state = randomBytes(32).toString("base64url");
-  const store = await cookies();
-  store.set("phoenix-recovery-state", state, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 600,
-  });
   await client.auth.resetPasswordForEmail(result.value!, {
-    redirectTo: `${trustedSiteUrl()}/auth/callback?flow=recovery&state=${encodeURIComponent(state)}`,
+    redirectTo: `${trustedSiteUrl()}/auth/recovery`,
   });
   return { success: true, message: genericRecovery };
 }
@@ -79,6 +69,5 @@ export async function updateRecoveredPassword(
   if (error) return { message: "Unable to update the password right now. Please try again." };
   await client.auth.signOut();
   store.delete("phoenix-recovery-authorized");
-  store.delete("phoenix-recovery-state");
   redirect("/login?reset=success");
 }
