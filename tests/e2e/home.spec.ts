@@ -289,3 +289,63 @@ test("recovers a password through the local email and rejects the old password",
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page).toHaveURL(/\/trading$/);
 });
+
+test("completes the Review learning loop on mobile", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/login");
+  await signIn(page, { email: e2eUser.email, password: "Phoenix-recovered-456!" });
+  await expect(page).toHaveURL(/\/trading$/);
+
+  await page.getByRole("link", { name: "Reviews", exact: true }).click();
+  await expect(page).toHaveURL(/\/trading\/reviews$/);
+  await expect(page.getByRole("heading", { name: "Trading Reviews" })).toBeVisible();
+  await page.getByRole("link", { name: "New Review", exact: true }).click();
+
+  await page.getByLabel("Review type").fill("Weekly process review");
+  await page.getByLabel("Period start").fill("2026-08-01");
+  await page.getByLabel("Period end").fill("2026-08-31");
+  await page.getByLabel("Review summary").fill("Execution stayed deliberate.");
+  await page.getByLabel("What worked").fill("Waited for the planned setup.");
+  await page.getByLabel("What needs work").fill("Reduce hesitation after confirmation.");
+  await page.getByLabel("Next actions").fill("Use the pre-session checklist.");
+  const tradeChoices = page.getByRole("checkbox", { name: /EURUSD/ });
+  if (await tradeChoices.count()) await tradeChoices.first().check();
+  await page.getByRole("button", { name: "Create Review" }).click();
+
+  await expect(page).toHaveURL(/\/trading\/reviews\/[0-9a-f-]+\?created=1$/);
+  await expect(page.getByRole("status")).toHaveText("Review created successfully.");
+  await expect(page.getByRole("heading", { name: "2026-08-01 → 2026-08-31" })).toBeVisible();
+  await page.getByRole("link", { name: "Edit Review" }).click();
+  await page.getByLabel("Next actions").fill("Use the checklist and record one observation.");
+  await page.getByRole("button", { name: "Save Review" }).click();
+
+  await expect(page).toHaveURL(/\/trading\/reviews\/[0-9a-f-]+\?updated=1$/);
+  await expect(page.getByRole("status")).toHaveText("Review updated successfully.");
+  await expect(page.getByText("Use the checklist and record one observation.")).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  const reviewPath = new URL(page.url()).pathname;
+  for (const viewport of [
+    { width: 1440, height: 900 },
+    { width: 1024, height: 768 },
+    { width: 768, height: 1024 },
+    { width: 390, height: 844 },
+  ]) {
+    await page.setViewportSize(viewport);
+    for (const path of [
+      "/trading/reviews",
+      "/trading/reviews/new",
+      reviewPath,
+      `${reviewPath}/edit`,
+    ]) {
+      await page.goto(path);
+      await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+        viewport.width,
+      );
+    }
+  }
+  await page.goto(reviewPath);
+  await page.getByRole("link", { name: "Back to Reviews" }).click();
+  await page.getByRole("link", { name: "Trading Dashboard" }).click();
+  await expect(page).toHaveURL(/\/trading$/);
+});

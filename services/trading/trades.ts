@@ -36,6 +36,13 @@ export async function listTrades(client: PhoenixSupabaseClient) {
   return result.trades;
 }
 
+export async function listRecentTrades(client: PhoenixSupabaseClient, limit = 200) {
+  await resolveCurrentTraderId(client);
+  const result = await new TradeRepository(client).listRecentForCurrentTrader(limit);
+  if (result.error || !result.trades) persistenceError();
+  return result.trades;
+}
+
 export async function getTrade(client: PhoenixSupabaseClient, id: string) {
   await resolveCurrentTraderId(client);
   const result = await new TradeRepository(client).findByIdForCurrentTrader(id);

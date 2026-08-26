@@ -88,6 +88,16 @@ export class TradeRepository {
     return { trades: data ? (data as Row[]).map(map) : null, error };
   }
 
+  async listRecentForCurrentTrader(limit = 200) {
+    const { data, error } = await this.client
+      .from("trades")
+      .select(columns)
+      .order("trade_date", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    return { trades: data ? (data as Row[]).map(map) : null, error };
+  }
+
   async findByIdForCurrentTrader(id: string) {
     const { data, error } = await this.client
       .from("trades")
