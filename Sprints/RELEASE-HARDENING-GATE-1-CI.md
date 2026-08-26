@@ -12,6 +12,10 @@
 
 `Phoenix Release Gates` runs for every pull request and every push to `main`. It has explicit `contents: read` permissions, no deployment capability, no production secrets, bounded job timeouts, and branch-aware concurrency: obsolete non-main runs are cancelled while active `main` validation is retained.
 
+### Manual dispatch fallback
+
+PR #2 did not produce a GitHub Actions run after valid `opened`, `reopened`, and `synchronize` events. No repository-side trigger, filter, permission, policy, workflow-state, or merge-conflict cause was identified. `workflow_dispatch` is therefore available as an operational fallback and must execute the same five release gates against the explicitly selected ref. It does not replace pull-request or `main` push validation and never authorizes bypassing a failed check.
+
 The five stable checks are deliberately suitable for required-status configuration:
 
 | Check | Responsibility | Timeout |
