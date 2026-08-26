@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { PageHeader } from "@/components/navigation/page-header";
 import { ReviewForm } from "@/components/trading/reviews/review-form";
 import { getReviewFormOptions } from "@/lib/trading/review-data";
 import { getReviewPageClient } from "@/lib/trading/review-page";
@@ -19,23 +20,20 @@ export default async function EditReviewPage({ params }: { params: Promise<{ id:
   }
   const options = await getReviewFormOptions(client, review.tradeIds);
   return (
-    <main className="mx-auto min-h-screen max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
+    <main className="mx-auto min-h-screen max-w-5xl px-4 py-7 sm:px-6 sm:py-9">
       <Link
         href={`/trading/reviews/${review.id}`}
         className="text-sm text-slate-400 hover:text-white"
       >
         ← Review Detail
       </Link>
-      <header className="mt-5">
-        <p className="text-xs font-semibold tracking-[0.18em] text-phoenix-orange uppercase">
-          Refine the learning
-        </p>
-        <h1 className="mt-2 text-3xl font-semibold text-white sm:text-4xl">Edit Review</h1>
-        <p className="mt-3 max-w-2xl leading-7 text-slate-400">
-          Update the narrative or replace linked evidence without changing historical Trades and
-          Objectives.
-        </p>
-      </header>
+      <div className="mt-5">
+        <PageHeader
+          eyebrow="Refine the learning"
+          title="Edit Review"
+          description="Update the narrative or replace linked evidence without changing historical Trades and Objectives."
+        />
+      </div>
       <div className="mt-8">
         <ReviewForm review={review} {...options} />
       </div>

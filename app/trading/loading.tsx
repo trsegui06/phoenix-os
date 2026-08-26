@@ -1,6 +1,6 @@
 export default function TradingLoading() {
   return (
-    <main className="mx-auto min-h-screen max-w-7xl animate-pulse px-4 py-8 sm:px-6 lg:px-8">
+    <main className="mx-auto min-h-screen max-w-7xl animate-pulse px-4 py-7 sm:px-6 sm:py-9 lg:px-8">
       <div className="h-10 w-64 rounded bg-slate-800" />
       <div className="mt-3 h-5 w-48 rounded bg-slate-900" />
       <div className="mt-8 h-28 rounded-2xl border border-slate-800 bg-slate-900/70" />

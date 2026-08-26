@@ -132,6 +132,45 @@ test("protects Trading, creates a session, logs out, and destroys the session", 
   await expect(page).toHaveURL(/\/login$/);
 });
 
+test("navigates the Trading shell and preserves mobile access", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/login");
+  await signIn(page);
+  await expect(page).toHaveURL(/\/trading$/);
+
+  const navigation = page.getByRole("navigation", { name: "Mobile trading navigation" });
+  await expect(navigation).toBeVisible();
+  const dashboard = navigation.getByRole("link", { name: "Dashboard" });
+  const trade = navigation.getByRole("link", { name: "Trade" });
+  const reviews = navigation.getByRole("link", { name: "Reviews" });
+  const setup = navigation.getByRole("link", { name: "Setup" });
+
+  await expect(dashboard).toHaveAttribute("aria-current", "page");
+  await trade.click();
+  await expect(page).toHaveURL(/\/trading\/new$/);
+  await expect(trade).toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("heading", { name: "New Trade" })).toBeVisible();
+
+  await reviews.click();
+  await expect(page).toHaveURL(/\/trading\/reviews$/);
+  await expect(reviews).toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("heading", { name: "Trading Reviews" })).toBeVisible();
+
+  await setup.click();
+  await expect(page).toHaveURL(/\/trading\/settings$/);
+  await expect(setup).toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("heading", { name: "Trading Setup", exact: true })).toBeVisible();
+  await dashboard.press("Enter");
+  await expect(page).toHaveURL(/\/trading$/);
+  await expect(dashboard).toHaveAttribute("aria-current", "page");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+
+  await page.getByRole("button", { name: "Logout" }).click();
+  await expect(page).toHaveURL(/\/login$/);
+  await page.goto("/trading/reviews");
+  await expect(page).toHaveURL(/\/login$/);
+});
+
 test("shows a generic error for invalid credentials", async ({ page }) => {
   await page.goto("/login");
   await page.getByLabel("Email").fill("missing@example.test");
@@ -346,6 +385,9 @@ test("completes the Review learning loop on mobile", async ({ page }) => {
   }
   await page.goto(reviewPath);
   await page.getByRole("link", { name: "Back to Reviews" }).click();
-  await page.getByRole("link", { name: "Trading Dashboard" }).click();
+  await page
+    .getByRole("navigation", { name: "Mobile trading navigation" })
+    .getByRole("link", { name: "Dashboard" })
+    .press("Enter");
   await expect(page).toHaveURL(/\/trading$/);
 });
