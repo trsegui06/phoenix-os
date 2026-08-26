@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { PageHeader } from "@/components/navigation/page-header";
 import {
   AccountSettings,
   SessionSettings,
@@ -59,29 +60,22 @@ export default async function TradingSettingsPage({
       ? errors[search.error]
       : null;
   return (
-    <main className="mx-auto min-h-screen max-w-6xl px-4 py-8 sm:px-6">
-      <Link href="/trading" className="text-sm text-slate-400 hover:text-white">
-        ← Trading Dashboard
-      </Link>
-      <div className="mt-5 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold tracking-[0.18em] text-phoenix-orange uppercase">
-            Self-service prerequisites
-          </p>
-          <h1 className="mt-2 text-3xl font-semibold text-white">Trading Setup</h1>
-          <p className="mt-2 text-slate-400">
-            Configure the structures required before recording Trades.
-          </p>
-        </div>
-        {ready && (
-          <Link
-            href="/trading/new"
-            className="rounded-lg bg-phoenix-orange px-4 py-2 font-semibold text-slate-950"
-          >
-            Record a Trade
-          </Link>
-        )}
-      </div>
+    <main className="mx-auto min-h-screen max-w-6xl px-4 py-7 sm:px-6 sm:py-9">
+      <PageHeader
+        eyebrow="Self-service prerequisites"
+        title="Trading Setup"
+        description="Configure the structures required before recording Trades."
+        action={
+          ready ? (
+            <Link
+              href="/trading/new"
+              className="inline-flex min-h-11 items-center rounded-lg bg-phoenix-orange px-4 py-2 font-semibold text-slate-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-phoenix-orange"
+            >
+              Record a Trade
+            </Link>
+          ) : undefined
+        }
+      />
       {notice && (
         <p
           role={search.error ? "alert" : "status"}

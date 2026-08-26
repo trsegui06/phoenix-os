@@ -1,5 +1,4 @@
-import { PhoenixMark } from "@/components/ui/phoenix-mark";
-import { logout } from "@/app/actions/auth";
+import { PageHeader } from "@/components/navigation/page-header";
 import { TradingDashboard } from "@/components/trading/dashboard/trading-dashboard";
 import { TradingFilters } from "@/components/trading/dashboard/trading-filters";
 import {
@@ -10,7 +9,6 @@ import {
 } from "@/domain/trading/trading-statistics";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { resolveCurrentTraderId } from "@/services/trading/current-trader";
 import { TradingApplicationError } from "@/services/trading/errors";
 import { listTradingAccounts } from "@/services/trading/trading-accounts";
@@ -99,56 +97,19 @@ export default async function TradingPage({ searchParams }: { searchParams: Sear
   }
 
   return (
-    <main className="mx-auto min-h-screen max-w-7xl overflow-x-hidden px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-      <header className="flex flex-col items-start justify-between gap-4 border-b border-slate-800 pb-8 sm:flex-row">
-        <div className="flex items-start gap-4">
-          <PhoenixMark />
-          <div>
-            <p className="text-xs font-semibold tracking-[0.2em] text-phoenix-orange uppercase">
-              Trading cockpit
-            </p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-              Trading Dashboard
-            </h1>
-            <p className="mt-2 text-base text-slate-300">Process before performance.</p>
-            <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
+    <main className="mx-auto min-h-screen max-w-7xl overflow-x-hidden px-4 py-7 sm:px-6 sm:py-9 lg:px-8">
+      <PageHeader
+        eyebrow="Trading cockpit"
+        title="Trading Dashboard"
+        description={
+          <>
+            <span className="block text-slate-300">Process before performance.</span>
+            <span className="mt-1 block text-sm text-slate-500">
               Track execution, risk, consistency and learning from your real trading data.
-            </p>
-          </div>
-        </div>
-        <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
-          <Link
-            href="/trading/reviews"
-            className="rounded-lg border border-slate-700 px-3 py-2 text-center text-sm font-medium text-slate-200 hover:border-slate-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-phoenix-orange"
-          >
-            Reviews
-          </Link>
-          {workspaceConfigured && (
-            <Link
-              href="/trading/settings"
-              className="rounded-lg border border-slate-700 px-3 py-2 text-center text-sm font-medium text-slate-200 hover:border-slate-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-phoenix-orange"
-            >
-              Trading Setup
-            </Link>
-          )}
-          {workspaceConfigured && (
-            <Link
-              href="/trading/new"
-              className="rounded-lg bg-phoenix-orange px-3 py-2 text-center text-sm font-semibold text-slate-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-phoenix-orange"
-            >
-              New Trade
-            </Link>
-          )}
-          <form action={logout}>
-            <button
-              type="submit"
-              className="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-300 hover:border-slate-600 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-phoenix-orange"
-            >
-              Logout
-            </button>
-          </form>
-        </div>
-      </header>
+            </span>
+          </>
+        }
+      />
 
       <div className="mt-8">
         <TradingFilters filter={filter} accounts={accounts} />

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { PageHeader } from "@/components/navigation/page-header";
 import { TradeEntryForm } from "@/components/trading/entry/trade-entry-form";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { resolveCurrentTraderId } from "@/services/trading/current-trader";
@@ -33,12 +34,12 @@ export default async function NewTradePage() {
     !setups.length && "a Setup",
   ].filter(Boolean);
   return (
-    <main className="mx-auto min-h-screen max-w-5xl px-4 py-8 sm:px-6">
-      <Link href="/trading" className="text-sm text-slate-400 hover:text-white">
-        ← Trading Dashboard
-      </Link>
-      <h1 className="mt-5 text-3xl font-semibold text-white">New Trade</h1>
-      <p className="mt-2 text-slate-400">Record execution and reflection in one atomic entry.</p>
+    <main className="mx-auto min-h-screen max-w-5xl px-4 py-7 sm:px-6 sm:py-9">
+      <PageHeader
+        eyebrow="Execution record"
+        title="New Trade"
+        description="Record execution and reflection in one atomic entry."
+      />
       {missing.length ? (
         <div
           role="status"

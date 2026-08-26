@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { PageHeader } from "@/components/navigation/page-header";
 import { ReviewDetail } from "@/components/trading/reviews/review-detail";
 import { getReviewLinkedData } from "@/lib/trading/review-data";
 import { getReviewPageClient } from "@/lib/trading/review-page";
@@ -26,21 +27,17 @@ export default async function ReviewDetailPage({
   const linked = await getReviewLinkedData(client, review.tradeIds, review.objectiveIds);
   const state = await searchParams;
   return (
-    <main className="mx-auto min-h-screen max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
+    <main className="mx-auto min-h-screen max-w-5xl px-4 py-7 sm:px-6 sm:py-9">
       <Link href="/trading/reviews" className="text-sm text-slate-400 hover:text-white">
         ← Reviews
       </Link>
-      <header className="mt-5">
-        <p className="text-xs font-semibold tracking-[0.18em] text-phoenix-orange uppercase">
-          {review.reviewType}
-        </p>
-        <h1 className="mt-2 text-3xl font-semibold text-white sm:text-4xl">
-          {review.periodStart} → {review.periodEnd}
-        </h1>
-        <p className="mt-3 leading-7 text-slate-400">
-          A structured record of execution, learning, and the next disciplined action.
-        </p>
-      </header>
+      <div className="mt-5">
+        <PageHeader
+          eyebrow={review.reviewType}
+          title={`${review.periodStart} → ${review.periodEnd}`}
+          description="A structured record of execution, learning, and the next disciplined action."
+        />
+      </div>
       {(state.created || state.updated) && (
         <p
           role="status"
