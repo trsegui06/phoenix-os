@@ -108,7 +108,7 @@ export function TradeEntryForm({ accounts, sessions, setups }: Props) {
               name={name}
               inputMode="decimal"
               required={name !== "exitPrice"}
-              className={fieldClass}
+              className={`${fieldClass} font-mono tabular-nums`}
             />
             {errorFor(name)}
           </label>
@@ -128,7 +128,11 @@ export function TradeEntryForm({ accounts, sessions, setups }: Props) {
         </label>
         <label className="text-sm text-slate-300">
           Realized P&amp;L{currency ? ` (${currency})` : ""}
-          <input name="pnl" inputMode="decimal" className={fieldClass} />
+          <input
+            name="pnl"
+            inputMode="decimal"
+            className={`${fieldClass} font-mono tabular-nums`}
+          />
           {errorFor("pnl")}
         </label>
         <label className="text-sm text-slate-300 md:col-span-2">

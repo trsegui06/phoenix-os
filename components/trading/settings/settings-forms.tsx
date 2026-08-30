@@ -25,17 +25,25 @@ function TextField({
   value,
   type = "text",
   required = false,
+  numeric = false,
 }: {
   name: string;
   children: React.ReactNode;
   value?: string;
   type?: string;
   required?: boolean;
+  numeric?: boolean;
 }) {
   return (
     <label className={label}>
       {children}
-      <input className={input} name={name} type={type} defaultValue={value} required={required} />
+      <input
+        className={`${input} ${numeric ? "font-mono tabular-nums" : ""}`}
+        name={name}
+        type={type}
+        defaultValue={value}
+        required={required}
+      />
     </label>
   );
 }
@@ -74,7 +82,7 @@ export function AccountSettings({ accounts }: { accounts: TradingAccount[] }) {
             <TextField name="currency" required>
               Currency (3-letter code)
             </TextField>
-            <TextField name="initialBalance" required>
+            <TextField name="initialBalance" required numeric>
               Initial Balance
             </TextField>
             <TextField name="status" required>
@@ -99,7 +107,7 @@ export function AccountSettings({ accounts }: { accounts: TradingAccount[] }) {
                 <p className="mt-1 text-sm text-slate-400">
                   {account.broker} · {account.accountType} · {account.currency} · {account.status}
                 </p>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 font-mono text-xs tabular-nums text-slate-500">
                   Initial {formatAccountMoney(account.initialBalanceCents)} {account.currency}
                   {account.currentBalanceCents !== null
                     ? ` · Current ${formatAccountMoney(account.currentBalanceCents)} ${account.currency}`
@@ -127,6 +135,7 @@ export function AccountSettings({ accounts }: { accounts: TradingAccount[] }) {
                   </TextField>
                   <TextField
                     name="currentBalance"
+                    numeric
                     value={
                       account.currentBalanceCents === null
                         ? ""
