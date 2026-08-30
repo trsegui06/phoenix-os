@@ -18,6 +18,21 @@ test("renders the Phoenix OS foundation page", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Phoenix OS" })).toBeVisible();
 });
 
+test("associates public Auth validation errors with their fields", async ({ page }) => {
+  await page.goto("/register");
+  await page.getByRole("button", { name: "Create account" }).click();
+
+  const email = page.getByLabel("Email");
+  await expect(email).toHaveAttribute("aria-invalid", "true");
+  await expect(email).toHaveAttribute("aria-describedby", "register-email-error");
+  await expect(page.locator("#register-email-error")).toBeVisible();
+
+  const password = page.getByLabel("Password", { exact: true });
+  await expect(password).toHaveAttribute("aria-invalid", "true");
+  await expect(password).toHaveAttribute("aria-describedby", "password-error");
+  await expect(page.locator("#password-error")).toBeVisible();
+});
+
 test("completes the first Trade from zero prerequisites without operator intervention", async ({
   page,
 }) => {
@@ -190,13 +205,19 @@ test("records a Trade with multiple errors and refreshes the dashboard", async (
   await expect(page.getByRole("heading", { name: "New Trade" })).toBeVisible();
   await page.getByLabel("Trade Date").fill("2026-08-17");
   await page.getByLabel("Asset").fill("EURUSD");
-  await page.getByLabel("Entry Price").fill("1.1");
+  await page.getByLabel("Entry Price").fill("not-a-price");
   await page.getByLabel("Stop Loss").fill("1.09");
   await page.getByLabel("Take Profit").fill("1.12");
   await page.getByLabel("Position Size").fill("2");
   await page.getByLabel("Risk (%)").fill("1.25");
   await page.getByLabel("Result").fill("win");
   await page.getByLabel(/Realized P&L/).fill("125.50");
+  await page.getByRole("button", { name: "Record Trade" }).click();
+  const entryPrice = page.getByLabel("Entry Price");
+  await expect(entryPrice).toHaveAttribute("aria-invalid", "true");
+  await expect(entryPrice).toHaveAttribute("aria-describedby", "entryPrice-error");
+  await expect(page.locator("#entryPrice-error")).toBeVisible();
+  await entryPrice.fill("1.1");
   for (const [category, severity, description] of [
     ["process", "low", "Late entry"],
     ["risk", "medium", "Wide stop"],

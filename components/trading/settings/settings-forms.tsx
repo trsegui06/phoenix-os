@@ -10,12 +10,13 @@ import {
   updateSetupFormAction,
 } from "@/app/actions/trading-settings";
 import { formatAccountMoney } from "@/lib/trading-settings";
+import { PendingSubmitButton } from "@/components/ui/pending-submit-button";
 
 const input =
   "mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white focus:border-phoenix-orange focus:outline-none";
 const label = "text-sm text-slate-300";
 const button =
-  "rounded-lg bg-phoenix-orange px-4 py-2 text-sm font-semibold text-slate-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-phoenix-orange";
+  "rounded-lg bg-phoenix-orange px-4 py-2 text-sm font-semibold text-slate-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-phoenix-orange disabled:cursor-wait disabled:opacity-60";
 const secondary =
   "rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 hover:border-slate-500";
 
@@ -88,7 +89,12 @@ export function AccountSettings({ accounts }: { accounts: TradingAccount[] }) {
             <TextField name="status" required>
               Status
             </TextField>
-            <button className={`${button} sm:col-span-2`}>Create Trading Account</button>
+            <PendingSubmitButton
+              pendingLabel="Creating Trading Account…"
+              className={`${button} sm:col-span-2`}
+            >
+              Create Trading Account
+            </PendingSubmitButton>
           </form>
         </details>
       </div>
@@ -155,7 +161,12 @@ export function AccountSettings({ accounts }: { accounts: TradingAccount[] }) {
                     Currency and initial balance are fixed after creation to preserve historical
                     meaning.
                   </p>
-                  <button className={`${button} sm:col-span-2`}>Update Trading Account</button>
+                  <PendingSubmitButton
+                    pendingLabel="Updating Trading Account…"
+                    className={`${button} sm:col-span-2`}
+                  >
+                    Update Trading Account
+                  </PendingSubmitButton>
                 </form>
               </details>
             </div>
@@ -209,7 +220,12 @@ export function SessionSettings({ sessions }: { sessions: TradingSession[] }) {
             className="mt-4 grid gap-4 rounded-xl border border-slate-800 p-4 sm:grid-cols-2"
           >
             {form()}
-            <button className={`${button} sm:col-span-2`}>Create Session</button>
+            <PendingSubmitButton
+              pendingLabel="Creating Session…"
+              className={`${button} sm:col-span-2`}
+            >
+              Create Session
+            </PendingSubmitButton>
           </form>
         </details>
       </div>
@@ -240,7 +256,12 @@ export function SessionSettings({ sessions }: { sessions: TradingSession[] }) {
                   <p className="text-xs text-amber-300 sm:col-span-2">
                     Changing date or type can reclassify historical Trade statistics.
                   </p>
-                  <button className={`${button} sm:col-span-2`}>Update Session</button>
+                  <PendingSubmitButton
+                    pendingLabel="Updating Session…"
+                    className={`${button} sm:col-span-2`}
+                  >
+                    Update Session
+                  </PendingSubmitButton>
                 </form>
               </details>
             </div>
@@ -304,7 +325,12 @@ export function SetupSettings({ setups }: { setups: TradingSetup[] }) {
             className="mt-4 grid gap-4 rounded-xl border border-slate-800 p-4 sm:grid-cols-2"
           >
             {form()}
-            <button className={`${button} sm:col-span-2`}>Create Setup</button>
+            <PendingSubmitButton
+              pendingLabel="Creating Setup…"
+              className={`${button} sm:col-span-2`}
+            >
+              Create Setup
+            </PendingSubmitButton>
           </form>
         </details>
       </div>
@@ -332,7 +358,12 @@ export function SetupSettings({ setups }: { setups: TradingSetup[] }) {
                   <p className="text-xs text-amber-300 sm:col-span-2">
                     Edits change the current description shown for historically linked Trades.
                   </p>
-                  <button className={`${button} sm:col-span-2`}>Update Setup</button>
+                  <PendingSubmitButton
+                    pendingLabel="Updating Setup…"
+                    className={`${button} sm:col-span-2`}
+                  >
+                    Update Setup
+                  </PendingSubmitButton>
                 </form>
               </details>
             </div>

@@ -45,9 +45,12 @@ function PasswordFields({
           autoComplete="new-password"
           disabled={pending}
           aria-invalid={Boolean(state.fieldErrors?.password)}
+          aria-describedby={state.fieldErrors?.password ? "password-error" : undefined}
         />
         {state.fieldErrors?.password && (
-          <span className="mt-2 block text-sm text-rose-300">{state.fieldErrors.password}</span>
+          <span id="password-error" className="mt-2 block text-sm text-rose-300">
+            {state.fieldErrors.password}
+          </span>
         )}
       </label>
       <label className="text-sm font-medium text-slate-200">
@@ -59,9 +62,12 @@ function PasswordFields({
           autoComplete="new-password"
           disabled={pending}
           aria-invalid={Boolean(state.fieldErrors?.confirmPassword)}
+          aria-describedby={
+            state.fieldErrors?.confirmPassword ? "confirm-password-error" : undefined
+          }
         />
         {state.fieldErrors?.confirmPassword && (
-          <span className="mt-2 block text-sm text-rose-300">
+          <span id="confirm-password-error" className="mt-2 block text-sm text-rose-300">
             {state.fieldErrors.confirmPassword}
           </span>
         )}
@@ -84,9 +90,12 @@ export function RegisterForm() {
           inputMode="email"
           disabled={pending}
           aria-invalid={Boolean(state.fieldErrors?.email)}
+          aria-describedby={state.fieldErrors?.email ? "register-email-error" : undefined}
         />
         {state.fieldErrors?.email && (
-          <span className="mt-2 block text-sm text-rose-300">{state.fieldErrors.email}</span>
+          <span id="register-email-error" className="mt-2 block text-sm text-rose-300">
+            {state.fieldErrors.email}
+          </span>
         )}
       </label>
       <PasswordFields state={state} pending={pending} />
@@ -118,9 +127,12 @@ export function ForgotPasswordForm() {
           inputMode="email"
           disabled={pending}
           aria-invalid={Boolean(state.fieldErrors?.email)}
+          aria-describedby={state.fieldErrors?.email ? "reset-email-error" : undefined}
         />
         {state.fieldErrors?.email && (
-          <span className="mt-2 block text-sm text-rose-300">{state.fieldErrors.email}</span>
+          <span id="reset-email-error" className="mt-2 block text-sm text-rose-300">
+            {state.fieldErrors.email}
+          </span>
         )}
       </label>
       <Status state={state} />

@@ -19,8 +19,14 @@ export function TradeEntryForm({ accounts, sessions, setups }: Props) {
     setErrors((rows) => rows.map((row, i) => (i === index ? { ...row, [field]: value } : row)));
   const errorFor = (name: string) =>
     state.fieldErrors?.[name] ? (
-      <p className="mt-1 text-sm text-red-300">{state.fieldErrors[name]}</p>
+      <p id={`${name}-error`} className="mt-1 text-sm text-red-300">
+        {state.fieldErrors[name]}
+      </p>
     ) : null;
+  const errorProps = (name: string) => ({
+    "aria-invalid": Boolean(state.fieldErrors?.[name]),
+    "aria-describedby": state.fieldErrors?.[name] ? `${name}-error` : undefined,
+  });
 
   return (
     <form action={action} className="space-y-8">
@@ -43,6 +49,7 @@ export function TradeEntryForm({ accounts, sessions, setups }: Props) {
             className={fieldClass}
             value={accountId}
             onChange={(e) => setAccountId(e.target.value)}
+            {...errorProps("tradingAccountId")}
           >
             {accounts.map((o) => (
               <option key={o.id} value={o.id}>
@@ -54,7 +61,13 @@ export function TradeEntryForm({ accounts, sessions, setups }: Props) {
         </label>
         <label className="text-sm text-slate-300">
           Session
-          <select name="sessionId" required className={fieldClass} defaultValue={sessions[0]?.id}>
+          <select
+            name="sessionId"
+            required
+            className={fieldClass}
+            defaultValue={sessions[0]?.id}
+            {...errorProps("sessionId")}
+          >
             {sessions.map((o) => (
               <option key={o.id} value={o.id}>
                 {o.label}
@@ -65,7 +78,13 @@ export function TradeEntryForm({ accounts, sessions, setups }: Props) {
         </label>
         <label className="text-sm text-slate-300">
           Setup
-          <select name="setupId" required className={fieldClass} defaultValue={setups[0]?.id}>
+          <select
+            name="setupId"
+            required
+            className={fieldClass}
+            defaultValue={setups[0]?.id}
+            {...errorProps("setupId")}
+          >
             {setups.map((o) => (
               <option key={o.id} value={o.id}>
                 {o.label}
@@ -76,12 +95,24 @@ export function TradeEntryForm({ accounts, sessions, setups }: Props) {
         </label>
         <label className="text-sm text-slate-300">
           Trade Date
-          <input name="tradeDate" type="date" required className={fieldClass} />
+          <input
+            name="tradeDate"
+            type="date"
+            required
+            className={fieldClass}
+            {...errorProps("tradeDate")}
+          />
           {errorFor("tradeDate")}
         </label>
         <label className="text-sm text-slate-300">
           Asset
-          <input name="asset" required className={fieldClass} placeholder="EURUSD" />
+          <input
+            name="asset"
+            required
+            className={fieldClass}
+            placeholder="EURUSD"
+            {...errorProps("asset")}
+          />
           {errorFor("asset")}
         </label>
         <label className="text-sm text-slate-300">
@@ -109,6 +140,7 @@ export function TradeEntryForm({ accounts, sessions, setups }: Props) {
               inputMode="decimal"
               required={name !== "exitPrice"}
               className={`${fieldClass} font-mono tabular-nums`}
+              {...errorProps(name)}
             />
             {errorFor(name)}
           </label>
@@ -123,6 +155,7 @@ export function TradeEntryForm({ accounts, sessions, setups }: Props) {
             required
             className={fieldClass}
             placeholder="win, loss, breakeven, open"
+            {...errorProps("result")}
           />
           {errorFor("result")}
         </label>
@@ -132,6 +165,7 @@ export function TradeEntryForm({ accounts, sessions, setups }: Props) {
             name="pnl"
             inputMode="decimal"
             className={`${fieldClass} font-mono tabular-nums`}
+            {...errorProps("pnl")}
           />
           {errorFor("pnl")}
         </label>
@@ -211,7 +245,7 @@ export function TradeEntryForm({ accounts, sessions, setups }: Props) {
             </button>
           </div>
         ))}
-        {errorFor("errors")}
+        <div aria-live="polite">{errorFor("errors")}</div>
       </fieldset>
       <div className="flex justify-end">
         <button
