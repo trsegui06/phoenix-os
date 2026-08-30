@@ -4,6 +4,8 @@
   --color-phoenix-orange: #f97316;
   --color-phoenix-surface: #172033;
   --color-phoenix-border: #334155;
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
 }
 
 :root {
@@ -24,5 +26,5 @@ body {
   margin: 0;
   background: radial-gradient(circle at top, rgb(249 115 22 / 12%), transparent 42%), #0f172a;
   color: #ffffff;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), sans-serif;
 }
