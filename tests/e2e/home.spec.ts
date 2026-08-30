@@ -21,6 +21,7 @@ test("renders the Phoenix OS foundation page", async ({ page }) => {
 test("completes the first Trade from zero prerequisites without operator intervention", async ({
   page,
 }) => {
+  test.setTimeout(60_000);
   const publicUser = {
     email: `phoenix-public-${Date.now()}@example.test`,
     password: "Phoenix-public-123!",
@@ -32,60 +33,41 @@ test("completes the first Trade from zero prerequisites without operator interve
   await page.getByLabel("Confirm password").fill(publicUser.password);
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page).toHaveURL(/\/onboarding$/);
-  await page.getByLabel("Name").fill("Self-Service Trader");
+  await expect(
+    page.getByRole("heading", { name: "Build your trading operating system" }),
+  ).toBeVisible();
+  await page.getByLabel("Workspace name").fill("Self-Service Trader");
   await page.getByLabel("Timezone").fill("Europe/Paris");
-  await page.getByRole("button", { name: "Build my trading workspace" }).click();
-  await expect(page).toHaveURL(/\/trading\/settings$/);
-  await expect(page.getByRole("heading", { name: "Trading Setup", exact: true })).toBeVisible();
-
-  const accounts = page.getByRole("region", { name: "Trading Accounts" });
-  await accounts.getByText("Add Account").click();
-  await accounts.getByLabel("Account Name").fill("Self-Service Account");
-  await accounts.getByLabel("Broker").fill("Phoenix Broker");
-  await accounts.getByLabel("Account Type").fill("cash");
-  await accounts.getByLabel("Currency (3-letter code)").fill("EUR");
-  await accounts.getByLabel("Initial Balance").fill("1000.00");
-  await accounts.getByLabel("Status").fill("active");
-  await accounts.getByRole("button", { name: "Create Trading Account" }).click();
-  await expect(page.getByText("Trading Account created.")).toBeVisible();
-  await expect(page.getByText("Self-Service Account", { exact: true })).toBeVisible();
-  const accountCard = accounts.locator("article").filter({ hasText: "Self-Service Account" });
-  await accountCard.getByText("Edit Account").click();
-  await accountCard.getByLabel("Account Name").fill("Self-Service Account Updated");
-  await accountCard.getByRole("button", { name: "Update Trading Account" }).click();
-  await expect(page.getByText("Trading Account updated.")).toBeVisible();
-
-  const sessions = page.getByRole("region", { name: "Trading Sessions" });
-  await sessions.getByText("Add Session").click();
-  await sessions.getByLabel("Session Date").fill("2026-08-17");
-  await sessions.getByLabel("Session Type").fill("London");
-  await sessions.getByRole("button", { name: "Create Session" }).click();
-  await expect(page.getByText("Session created.")).toBeVisible();
-  const sessionCard = sessions.locator("article").filter({ hasText: "London" });
-  await sessionCard.getByText("Edit Session").click();
-  await sessionCard.getByLabel("Session Type").fill("London Updated");
-  await sessionCard.getByRole("button", { name: "Update Session" }).click();
-  await expect(page.getByText("Session updated.")).toBeVisible();
-
-  const setups = page.getByRole("region", { name: "Trading Setups" });
-  await setups.getByText("Add Setup").click();
-  await setups.getByLabel("Name").fill("Breakout");
-  await setups.getByLabel("Timeframe").fill("5m");
-  await setups.getByLabel("Entry Rules").fill("Break structure");
-  await setups.getByLabel("Exit Rules").fill("Target or stop");
-  await setups.getByLabel("Validation Rules").fill("Confirm volume");
-  await setups.getByRole("button", { name: "Create Setup" }).click();
-  await expect(page.getByText("Setup created.")).toBeVisible();
-  const setupCard = setups.locator("article").filter({ hasText: "Breakout" });
-  await setupCard.getByText("Edit Setup").click();
-  await setupCard.getByLabel("Timeframe").fill("15m");
-  await setupCard.getByRole("button", { name: "Update Setup" }).click();
-  await expect(page.getByText("Setup updated.")).toBeVisible();
-
-  await page.getByRole("link", { name: "Record a Trade" }).click();
+  await page.getByRole("button", { name: "Set Up My Trading Environment" }).click();
+  await expect(page.getByRole("heading", { name: "Add your first Trading Account" })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "Add your first Trading Account" })).toBeVisible();
+  await page.getByLabel("Account Name").fill("Self-Service Account");
+  await page.getByLabel("Broker").fill("Phoenix Broker");
+  await page.getByLabel("Account Type").fill("cash");
+  await page.getByLabel("Currency (3-letter code)").fill("EUR");
+  await page.getByLabel("Initial Balance").fill("1000.00");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Configure your trading environment" }),
+  ).toBeVisible();
+  await page.reload();
+  await page.getByLabel("Session Date").fill("2026-08-17");
+  await page.getByLabel("Session Type").fill("London Updated");
+  await page.getByLabel("Name").fill("Breakout");
+  await page.getByLabel("Timeframe").fill("15m");
+  await page.getByLabel("Entry Rules").fill("Break structure");
+  await page.getByLabel("Exit Rules").fill("Target or stop");
+  await page.getByLabel("Validation Rules").fill("Confirm volume");
+  await page.getByRole("button", { name: "Finish Setup" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Your trading environment is ready" }),
+  ).toBeVisible();
+  await page.getByRole("link", { name: "Go to Dashboard" }).click();
+  await page.getByRole("link", { name: "Trade", exact: true }).click();
   await expect(page).toHaveURL(/\/trading\/new$/);
   await expect(page.getByRole("combobox", { name: "Trading Account" })).toContainText(
-    "Self-Service Account Updated",
+    "Self-Service Account",
   );
   await expect(page.getByRole("combobox", { name: "Session" })).toContainText("London Updated");
   await expect(page.getByRole("combobox", { name: "Setup" })).toContainText("Breakout — 15m");
@@ -104,6 +86,12 @@ test("completes the first Trade from zero prerequisites without operator interve
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await page.getByRole("button", { name: "Logout" }).click();
   await signIn(page, publicUser);
+  await expect(page).toHaveURL(/\/trading$/);
+  await page.goto("/onboarding");
+  await expect(
+    page.getByRole("heading", { name: "Your trading environment is ready" }),
+  ).toBeVisible();
+  await page.getByRole("link", { name: "Go to Dashboard" }).click();
   await expect(page).toHaveURL(/\/trading$/);
 });
 
@@ -223,10 +211,42 @@ test("routes an authenticated user without a Trader to onboarding", async ({ pag
   await page.goto("/login");
   await signIn(page, e2eMissingProfileUser);
   await expect(page).toHaveURL(/\/onboarding$/);
-  await expect(page.getByRole("heading", { name: "Build your trading workspace." })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Build your trading operating system" }),
+  ).toBeVisible();
   await page.goto("/trading/settings");
   await expect(page).toHaveURL(/\/onboarding$/);
   await expect(page.getByText("Add Account")).toHaveCount(0);
+});
+
+test("keeps onboarding skip behavior deterministic without creating prerequisites", async ({
+  page,
+}) => {
+  const user = {
+    email: `phoenix-onboarding-skip-${Date.now()}@example.test`,
+    password: "Phoenix-skip-123!",
+  };
+  await page.setViewportSize({ width: 1024, height: 768 });
+  await page.goto("/register");
+  await page.getByLabel("Email").fill(user.email);
+  await page.getByLabel("Password", { exact: true }).fill(user.password);
+  await page.getByLabel("Confirm password").fill(user.password);
+  await page.getByRole("button", { name: "Create account" }).click();
+  await page.getByLabel("Workspace name").fill("Skip Flow Trader");
+  await page.getByRole("button", { name: "Set Up My Trading Environment" }).click();
+  await page.getByRole("link", { name: "Skip for now" }).click();
+  await expect(page).toHaveURL(/\/onboarding\?step=environment$/);
+  await page.reload();
+  await expect(
+    page.getByRole("heading", { name: "Configure your trading environment" }),
+  ).toBeVisible();
+  await page.getByRole("link", { name: "Skip for now" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Your trading environment is ready" }),
+  ).toBeVisible();
+  await page.getByRole("link", { name: "Go to Dashboard" }).click();
+  await page.getByRole("link", { name: "New Trade" }).click();
+  await expect(page.getByText(/Create a Trading Account, a Session, a Setup/)).toBeVisible();
 });
 
 test("keeps Login and authenticated Trading usable at required viewports", async ({ page }) => {
