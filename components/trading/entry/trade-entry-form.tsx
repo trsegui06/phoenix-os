@@ -6,6 +6,23 @@ import { createTradeEntryAction, type TradeEntryState } from "@/app/actions/trad
 type Option = { id: string; label: string; currency?: string };
 type Props = { accounts: Option[]; sessions: Option[]; setups: Option[] };
 type EntryError = { category: string; severity: string; description: string; solution: string };
+type EntryValues = {
+  sessionId: string;
+  setupId: string;
+  tradeDate: string;
+  asset: string;
+  direction: string;
+  entryPrice: string;
+  stopLoss: string;
+  takeProfit: string;
+  exitPrice: string;
+  positionSize: string;
+  riskPercent: string;
+  result: string;
+  pnl: string;
+  executionQuality: string;
+  notes: string;
+};
 const initialState: TradeEntryState = {};
 const fieldClass =
   "mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white focus:border-phoenix-orange focus:outline-none";
@@ -14,6 +31,23 @@ export function TradeEntryForm({ accounts, sessions, setups }: Props) {
   const [state, action, pending] = useActionState(createTradeEntryAction, initialState);
   const [errors, setErrors] = useState<EntryError[]>([]);
   const [accountId, setAccountId] = useState(accounts[0]?.id ?? "");
+  const [values, setValues] = useState<EntryValues>({
+    sessionId: sessions[0]?.id ?? "",
+    setupId: setups[0]?.id ?? "",
+    tradeDate: "",
+    asset: "",
+    direction: "long",
+    entryPrice: "",
+    stopLoss: "",
+    takeProfit: "",
+    exitPrice: "",
+    positionSize: "",
+    riskPercent: "",
+    result: "",
+    pnl: "",
+    executionQuality: "",
+    notes: "",
+  });
   const currency = accounts.find((account) => account.id === accountId)?.currency;
   const updateError = (index: number, field: keyof EntryError, value: string) =>
     setErrors((rows) => rows.map((row, i) => (i === index ? { ...row, [field]: value } : row)));
@@ -26,6 +60,12 @@ export function TradeEntryForm({ accounts, sessions, setups }: Props) {
   const errorProps = (name: string) => ({
     "aria-invalid": Boolean(state.fieldErrors?.[name]),
     "aria-describedby": state.fieldErrors?.[name] ? `${name}-error` : undefined,
+  });
+  const valueProps = (name: keyof EntryValues) => ({
+    value: values[name],
+    onChange: (
+      event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
+    ) => setValues((current) => ({ ...current, [name]: event.target.value })),
   });
 
   return (
@@ -65,7 +105,7 @@ export function TradeEntryForm({ accounts, sessions, setups }: Props) {
             name="sessionId"
             required
             className={fieldClass}
-            defaultValue={sessions[0]?.id}
+            {...valueProps("sessionId")}
             {...errorProps("sessionId")}
           >
             {sessions.map((o) => (
@@ -82,7 +122,7 @@ export function TradeEntryForm({ accounts, sessions, setups }: Props) {
             name="setupId"
             required
             className={fieldClass}
-            defaultValue={setups[0]?.id}
+            {...valueProps("setupId")}
             {...errorProps("setupId")}
           >
             {setups.map((o) => (
@@ -100,6 +140,7 @@ export function TradeEntryForm({ accounts, sessions, setups }: Props) {
             type="date"
             required
             className={fieldClass}
+            {...valueProps("tradeDate")}
             {...errorProps("tradeDate")}
           />
           {errorFor("tradeDate")}
@@ -111,13 +152,14 @@ export function TradeEntryForm({ accounts, sessions, setups }: Props) {
             required
             className={fieldClass}
             placeholder="EURUSD"
+            {...valueProps("asset")}
             {...errorProps("asset")}
           />
           {errorFor("asset")}
         </label>
         <label className="text-sm text-slate-300">
           Direction
-          <select name="direction" className={fieldClass}>
+          <select name="direction" className={fieldClass} {...valueProps("direction")}>
             <option value="long">Long</option>
             <option value="short">Short</option>
           </select>
@@ -140,6 +182,7 @@ export function TradeEntryForm({ accounts, sessions, setups }: Props) {
               inputMode="decimal"
               required={name !== "exitPrice"}
               className={`${fieldClass} font-mono tabular-nums`}
+              {...valueProps(name as keyof EntryValues)}
               {...errorProps(name)}
             />
             {errorFor(name)}
@@ -155,6 +198,7 @@ export function TradeEntryForm({ accounts, sessions, setups }: Props) {
             required
             className={fieldClass}
             placeholder="win, loss, breakeven, open"
+            {...valueProps("result")}
             {...errorProps("result")}
           />
           {errorFor("result")}
@@ -165,20 +209,26 @@ export function TradeEntryForm({ accounts, sessions, setups }: Props) {
             name="pnl"
             inputMode="decimal"
             className={`${fieldClass} font-mono tabular-nums`}
+            {...valueProps("pnl")}
             {...errorProps("pnl")}
           />
           {errorFor("pnl")}
         </label>
         <label className="text-sm text-slate-300 md:col-span-2">
           Execution Quality
-          <input name="executionQuality" className={fieldClass} placeholder="Optional" />
+          <input
+            name="executionQuality"
+            className={fieldClass}
+            placeholder="Optional"
+            {...valueProps("executionQuality")}
+          />
         </label>
       </fieldset>
       <fieldset className="space-y-5 rounded-2xl border border-slate-800 bg-slate-900/40 p-5">
         <legend className="px-2 text-lg font-semibold text-white">Reflection</legend>
         <label className="block text-sm text-slate-300">
           Notes
-          <textarea name="notes" rows={4} className={fieldClass} />
+          <textarea name="notes" rows={4} className={fieldClass} {...valueProps("notes")} />
         </label>
         <div className="flex items-center justify-between">
           <h2 className="font-semibold text-white">Trade Errors</h2>

@@ -217,6 +217,14 @@ test("records a Trade with multiple errors and refreshes the dashboard", async (
   await expect(entryPrice).toHaveAttribute("aria-invalid", "true");
   await expect(entryPrice).toHaveAttribute("aria-describedby", "entryPrice-error");
   await expect(page.locator("#entryPrice-error")).toBeVisible();
+  await expect(page.getByLabel("Trade Date")).toHaveValue("2026-08-17");
+  await expect(page.getByLabel("Asset")).toHaveValue("EURUSD");
+  await expect(page.getByLabel("Stop Loss")).toHaveValue("1.09");
+  await expect(page.getByLabel("Take Profit")).toHaveValue("1.12");
+  await expect(page.getByLabel("Position Size")).toHaveValue("2");
+  await expect(page.getByLabel("Risk (%)")).toHaveValue("1.25");
+  await expect(page.getByLabel("Result")).toHaveValue("win");
+  await expect(page.getByLabel(/Realized P&L/)).toHaveValue("125.50");
   await entryPrice.fill("1.1");
   for (const [category, severity, description] of [
     ["process", "low", "Late entry"],
