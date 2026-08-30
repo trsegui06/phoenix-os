@@ -98,6 +98,7 @@ test("completes the first Trade from zero prerequisites without operator interve
 test("protects Trading, creates a session, logs out, and destroys the session", async ({
   page,
 }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/trading");
   await expect(page).toHaveURL(/\/login$/);
   await page.goto("/trading/settings");
@@ -113,6 +114,16 @@ test("protects Trading, creates a session, logs out, and destroys the session", 
   await expect(page.getByRole("heading", { name: "Session Performance" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Asset Performance" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Trade Error Insights" })).toBeVisible();
+  const identity = page.getByLabel("Current Phoenix identity");
+  await expect(identity).toBeVisible();
+  await expect(identity).toContainText("Phoenix E2E Trader");
+  await expect(identity).toContainText(e2eUser.email);
+  await expect(identity).not.toContainText(
+    /[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i,
+  );
+  await expect(
+    page.getByRole("navigation", { name: "Primary trading navigation" }).getByRole("link"),
+  ).toHaveCount(4);
 
   await page.getByRole("button", { name: "Logout" }).click();
   await expect(page).toHaveURL(/\/login$/);
@@ -128,6 +139,8 @@ test("navigates the Trading shell and preserves mobile access", async ({ page })
 
   const navigation = page.getByRole("navigation", { name: "Mobile trading navigation" });
   await expect(navigation).toBeVisible();
+  await expect(navigation.getByRole("link")).toHaveCount(4);
+  await expect(page.getByLabel("Current Phoenix identity")).toBeHidden();
   const dashboard = navigation.getByRole("link", { name: "Dashboard" });
   const trade = navigation.getByRole("link", { name: "Trade" });
   const reviews = navigation.getByRole("link", { name: "Reviews" });

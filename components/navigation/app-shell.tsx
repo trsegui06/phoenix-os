@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { logout } from "@/app/actions/auth";
 import { TradingNavigation } from "@/components/navigation/trading-navigation";
 import { PhoenixMark } from "@/components/ui/phoenix-mark";
+import type { ShellIdentity } from "@/services/trading/current-trader";
 
 function LogoutButton({ compact = false }: { compact?: boolean }) {
   return (
@@ -17,7 +18,7 @@ function LogoutButton({ compact = false }: { compact?: boolean }) {
   );
 }
 
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell({ children, identity }: { children: ReactNode; identity: ShellIdentity }) {
   return (
     <div className="min-h-screen bg-slate-950/20 lg:grid lg:grid-cols-[15rem_minmax(0,1fr)]">
       <aside className="hidden border-r border-slate-800/90 bg-slate-950/80 lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col lg:px-5 lg:py-6">
@@ -35,7 +36,10 @@ export function AppShell({ children }: { children: ReactNode }) {
           <TradingNavigation />
         </div>
         <div className="mt-auto border-t border-slate-800 pt-5">
-          <p className="mb-3 px-2 text-xs text-slate-500">Trading workspace</p>
+          <div aria-label="Current Phoenix identity" className="mb-3 min-w-0 px-2">
+            <p className="truncate text-sm font-medium text-slate-200">{identity.primary}</p>
+            <p className="mt-0.5 truncate text-xs text-slate-500">{identity.secondary}</p>
+          </div>
           <LogoutButton />
         </div>
       </aside>
