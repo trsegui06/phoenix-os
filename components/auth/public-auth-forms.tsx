@@ -34,11 +34,17 @@ function PasswordFields({
   pending: boolean;
   prefix?: string;
 }) {
+  const passwordId = prefix ? "new-password" : "password";
+  const confirmPasswordId = prefix ? "confirm-new-password" : "confirm-password";
+
   return (
     <>
-      <label className="text-sm font-medium text-slate-200">
-        {prefix}Password
+      <div>
+        <label htmlFor={passwordId} className="text-sm font-medium text-slate-200">
+          {prefix}Password
+        </label>
         <input
+          id={passwordId}
           className={control}
           type="password"
           name="password"
@@ -52,10 +58,13 @@ function PasswordFields({
             {state.fieldErrors.password}
           </span>
         )}
-      </label>
-      <label className="text-sm font-medium text-slate-200">
-        Confirm {prefix.toLowerCase()}password
+      </div>
+      <div>
+        <label htmlFor={confirmPasswordId} className="text-sm font-medium text-slate-200">
+          Confirm {prefix.toLowerCase()}password
+        </label>
         <input
+          id={confirmPasswordId}
           className={control}
           type="password"
           name="confirmPassword"
@@ -71,7 +80,7 @@ function PasswordFields({
             {state.fieldErrors.confirmPassword}
           </span>
         )}
-      </label>
+      </div>
     </>
   );
 }
@@ -80,9 +89,12 @@ export function RegisterForm() {
   const [state, action, pending] = useActionState(register, initial);
   return (
     <form action={action} noValidate className="mt-8 grid gap-5">
-      <label className="text-sm font-medium text-slate-200">
-        Email
+      <div>
+        <label htmlFor="register-email" className="text-sm font-medium text-slate-200">
+          Email
+        </label>
         <input
+          id="register-email"
           className={control}
           type="email"
           name="email"
@@ -97,7 +109,7 @@ export function RegisterForm() {
             {state.fieldErrors.email}
           </span>
         )}
-      </label>
+      </div>
       <PasswordFields state={state} pending={pending} />
       <Status state={state} />
       <button
@@ -117,9 +129,12 @@ export function ForgotPasswordForm() {
   const [state, action, pending] = useActionState(requestPasswordReset, initial);
   return (
     <form action={action} noValidate className="mt-8 grid gap-5">
-      <label className="text-sm font-medium text-slate-200">
-        Email
+      <div>
+        <label htmlFor="reset-email" className="text-sm font-medium text-slate-200">
+          Email
+        </label>
         <input
+          id="reset-email"
           className={control}
           type="email"
           name="email"
@@ -134,7 +149,7 @@ export function ForgotPasswordForm() {
             {state.fieldErrors.email}
           </span>
         )}
-      </label>
+      </div>
       <Status state={state} />
       <button
         disabled={pending}
