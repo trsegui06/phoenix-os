@@ -1,11 +1,18 @@
 import { describe, expect, it, vi } from "vitest";
 
 import type { PhoenixSupabaseClient } from "@/lib/supabase/types";
-import { resolveCurrentTraderId } from "@/services/trading/current-trader";
+import {
+  deriveShellIdentity,
+  resolveCurrentTraderIdentity,
+  resolveCurrentTraderId,
+} from "@/services/trading/current-trader";
 
 function clientWith(
-  user: { id: string } | null,
-  traderResult: { data: { id: string } | null; error: { message: string } | null },
+  user: { id: string; email?: string } | null,
+  traderResult: {
+    data: { id: string; name?: string } | null;
+    error: { message: string } | null;
+  },
 ) {
   const maybeSingle = vi.fn().mockResolvedValue(traderResult);
   const client = {
@@ -53,5 +60,71 @@ describe("resolveCurrentTraderId", () => {
     const { client } = clientWith({ id: "auth-user" }, { data: { id: "trader-id" }, error: null });
 
     await expect(resolveCurrentTraderId(client)).resolves.toBe("trader-id");
+  });
+});
+
+describe("deriveShellIdentity", () => {
+  it("uses a trimmed Trader name with email context", () => {
+    expect(deriveShellIdentity("  Phoenix Trader  ", "trader@example.test")).toEqual({
+      primary: "Phoenix Trader",
+      secondary: "trader@example.test",
+    });
+  });
+
+  it("falls back to the authenticated email when the Trader name is blank", () => {
+    expect(deriveShellIdentity("   ", "trader@example.test")).toEqual({
+      primary: "trader@example.test",
+      secondary: "Trading workspace",
+    });
+  });
+
+  it("keeps a Trader name with neutral context when email is unavailable", () => {
+    expect(deriveShellIdentity("Phoenix Trader", null)).toEqual({
+      primary: "Phoenix Trader",
+      secondary: "Trading workspace",
+    });
+  });
+
+  it("uses a deterministic neutral fallback without identifiers", () => {
+    expect(deriveShellIdentity()).toEqual({
+      primary: "Trader",
+      secondary: "Trading workspace",
+    });
+  });
+});
+
+describe("resolveCurrentTraderIdentity", () => {
+  it("resolves safe Trader and Auth display data", async () => {
+    const { client } = clientWith(
+      { id: "auth-user", email: "trader@example.test" },
+      { data: { id: "internal-trader-id", name: "Phoenix Trader" }, error: null },
+    );
+
+    await expect(resolveCurrentTraderIdentity(client)).resolves.toEqual({
+      primary: "Phoenix Trader",
+      secondary: "trader@example.test",
+    });
+  });
+
+  it("falls back to email when the optional Trader lookup fails", async () => {
+    const { client } = clientWith(
+      { id: "auth-user", email: "trader@example.test" },
+      { data: null, error: { message: "database unavailable" } },
+    );
+
+    await expect(resolveCurrentTraderIdentity(client)).resolves.toEqual({
+      primary: "trader@example.test",
+      secondary: "Trading workspace",
+    });
+  });
+
+  it("returns a neutral identity without querying for unauthenticated requests", async () => {
+    const { client, maybeSingle } = clientWith(null, { data: null, error: null });
+
+    await expect(resolveCurrentTraderIdentity(client)).resolves.toEqual({
+      primary: "Trader",
+      secondary: "Trading workspace",
+    });
+    expect(maybeSingle).not.toHaveBeenCalled();
   });
 });
