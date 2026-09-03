@@ -16,14 +16,12 @@ export function formatCurrencyCents(currency: string, value: string): string {
   const match = decimal.exec(value);
   if (!match) return "—";
   const [, negative, digits, fraction = ""] = match;
-  const centsDigits = `${digits}${fraction}`.replace(/^0+(?=\d)/, "");
-  const scale = 2 + fraction.length;
-  const padded = centsDigits.padStart(scale + 1, "0");
-  const whole = padded.slice(0, -scale);
-  const minor = padded.slice(-scale).padEnd(2, "0");
-  const grouped = new Intl.NumberFormat("en-US").format(BigInt(whole));
+  const roundedCents = BigInt(digits) + (fraction[0] >= "5" ? 1n : 0n);
+  const whole = roundedCents / 100n;
+  const minor = (roundedCents % 100n).toString().padStart(2, "0");
+  const grouped = new Intl.NumberFormat("en-US").format(whole);
   const amount = `${currencySymbol(currency)}${grouped}.${minor}`;
-  if (/^0+$/.test(centsDigits)) return amount;
+  if (roundedCents === 0n) return amount;
   return negative ? `−${amount}` : `+${amount}`;
 }
 
