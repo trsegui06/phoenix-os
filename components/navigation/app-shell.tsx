@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 import { logout } from "@/app/actions/auth";
 import { TradingNavigation } from "@/components/navigation/trading-navigation";
-import { PhoenixMark } from "@/components/ui/phoenix-mark";
+import { BrandLockup } from "@/components/ui/phoenix-mark";
 import type { ShellIdentity } from "@/services/trading/current-trader";
 
 function LogoutButton({ compact = false }: { compact?: boolean }) {
@@ -22,12 +22,11 @@ export function AppShell({ children, identity }: { children: ReactNode; identity
   return (
     <div className="min-h-screen bg-slate-950/20 lg:grid lg:grid-cols-[15rem_minmax(0,1fr)]">
       <aside className="hidden border-r border-slate-800/90 bg-slate-950/80 lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col lg:px-5 lg:py-6">
-        <div className="flex items-center gap-3 px-2">
-          <PhoenixMark />
-          <div className="min-w-0">
-            <p className="font-semibold tracking-tight text-white">Phoenix OS</p>
-            <p className="text-xs tracking-[0.16em] text-slate-500 uppercase">Trading</p>
-          </div>
+        <div className="px-2">
+          <BrandLockup />
+          <p className="mt-2 pl-[3.75rem] text-xs tracking-[0.16em] text-slate-500 uppercase">
+            Trading
+          </p>
         </div>
         <div className="mt-9">
           <p className="mb-3 px-3 text-[0.68rem] font-semibold tracking-[0.2em] text-slate-600 uppercase">
@@ -46,13 +45,7 @@ export function AppShell({ children, identity }: { children: ReactNode; identity
 
       <div className="min-w-0 pb-24 lg:pb-0">
         <header className="flex min-h-16 items-center justify-between border-b border-slate-800/80 bg-slate-950/80 px-4 backdrop-blur lg:hidden">
-          <div className="flex items-center gap-3">
-            <PhoenixMark />
-            <div>
-              <p className="font-semibold text-white">Phoenix OS</p>
-              <p className="text-xs text-slate-500">Trading</p>
-            </div>
-          </div>
+          <BrandLockup compact />
           <LogoutButton compact />
         </header>
         {children}

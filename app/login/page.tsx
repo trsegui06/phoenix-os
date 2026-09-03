@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 
 import { LoginForm } from "@/components/auth/login-form";
-import { PhoenixMark } from "@/components/ui/phoenix-mark";
+import { BrandLockup } from "@/components/ui/phoenix-mark";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { hasCurrentTrader } from "@/services/trading/trader-provisioning";
 
@@ -25,10 +25,7 @@ export default async function LoginPage({
         aria-labelledby="login-title"
         className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900/85 p-6 shadow-sm shadow-black/20 sm:p-8"
       >
-        <PhoenixMark />
-        <p className="mt-6 text-xs font-semibold tracking-[0.18em] text-phoenix-orange uppercase">
-          Phoenix OS
-        </p>
+        <BrandLockup />
         <h1 id="login-title" className="mt-2 text-3xl font-semibold tracking-tight text-white">
           Discipline before profit.
         </h1>
