@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { PhoenixMark } from "@/components/ui/phoenix-mark";
+import { BrandLockup } from "@/components/ui/phoenix-mark";
 
 export function AuthShell({
   title,
@@ -17,10 +17,7 @@ export function AuthShell({
         aria-labelledby="auth-title"
         className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900/85 p-6 shadow-sm shadow-black/20 sm:p-8"
       >
-        <PhoenixMark />
-        <p className="mt-6 text-xs font-semibold tracking-[0.18em] text-phoenix-orange uppercase">
-          Phoenix OS
-        </p>
+        <BrandLockup />
         <h1 id="auth-title" className="mt-2 text-3xl font-semibold tracking-tight text-white">
           {title}
         </h1>

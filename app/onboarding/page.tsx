@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { OnboardingForm } from "@/components/onboarding/onboarding-form";
-import { PhoenixMark } from "@/components/ui/phoenix-mark";
+import { BrandLockup } from "@/components/ui/phoenix-mark";
 import { resolveOnboardingStep } from "@/lib/onboarding";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { hasCurrentTrader } from "@/services/trading/trader-provisioning";
@@ -69,7 +69,7 @@ export default async function OnboardingPage({
         aria-labelledby="onboarding-title"
         className="w-full max-w-3xl rounded-2xl border border-slate-800 bg-slate-900/85 p-6 shadow-sm shadow-black/20 sm:p-8"
       >
-        <PhoenixMark />
+        <BrandLockup />
         <p className="mt-6 text-xs font-semibold tracking-[0.18em] text-phoenix-orange uppercase">
           {copy.eyebrow}
         </p>

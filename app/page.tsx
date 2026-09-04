@@ -1,11 +1,11 @@
-import { PhoenixMark } from "@/components/ui/phoenix-mark";
+import { BrandLockup } from "@/components/ui/phoenix-mark";
 import { Surface } from "@/components/ui/surface";
 
 export default function HomePage() {
   return (
     <main className="flex min-h-screen items-center justify-center px-6 py-12 sm:px-10">
       <Surface className="w-full max-w-xl text-center">
-        <PhoenixMark />
+        <BrandLockup tagline />
         <p className="mt-8 text-sm font-semibold tracking-[0.2em] text-phoenix-orange uppercase">
           Application foundation
         </p>
