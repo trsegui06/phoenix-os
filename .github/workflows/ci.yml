@@ -181,10 +181,10 @@ jobs:
         if: always()
         run: pnpm exec supabase stop --no-backup --agent no
 
-  build-security:
-    name: Build & Security
+  dependency-security:
+    name: Dependency Security
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - name: Checkout full history
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -212,10 +212,110 @@ jobs:
       - name: Frozen install
         run: pnpm install --frozen-lockfile
       - name: Audit production dependencies
-        run: pnpm audit --prod --audit-level high
+        shell: bash
+        timeout-minutes: 16
+        run: |
+          audit_log="$(mktemp)"
+          trap 'rm -f "$audit_log"' EXIT
+          for attempt in 1 2 3; do
+            echo "Dependency audit attempt ${attempt}/3"
+            if pnpm audit --prod --audit-level high >"$audit_log" 2>&1; then
+              cat "$audit_log"
+              echo "Dependency audit passed on attempt ${attempt}/3"
+              exit 0
+            else
+              audit_status=$?
+            fi
+            cat "$audit_log"
+            echo "Dependency audit attempt ${attempt}/3 failed (exit ${audit_status})"
+            # Retry only the exact advisory timeout observed with pinned pnpm.
+            # Vulnerability findings and unrecognized errors fail immediately.
+            if ! grep -Fxq 'TimeoutError: The operation was aborted due to timeout' "$audit_log"; then
+              echo "::error::Audit failed without the recognized transport timeout; not retrying."
+              exit "$audit_status"
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              echo "::error::Dependency audit failed after all 3 attempts."
+              exit "$audit_status"
+            fi
+            delay=$((attempt * 30))
+            echo "::warning::Advisory request timed out; retrying in ${delay} seconds."
+            sleep "$delay"
+          done
+
+  production-build:
+    name: Production Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Install pnpm
+        uses: pnpm/action-setup@f520eceda224fe1a4aed5a2a27a194379a409996 # v6
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - name: Install Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - name: Verify exact toolchain
+        run: |
+          node --version
+          pnpm --version
+          test "$(node --version)" = "v${NODE_VERSION}"
+          test "$(pnpm --version)" = "${PNPM_VERSION}"
+      - name: Frozen install
+        run: pnpm install --frozen-lockfile
       - name: Build production application with synthetic local configuration
         env:
           NEXT_PUBLIC_SUPABASE_URL: https://ci-placeholder.supabase.co
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-local-placeholder
           NEXT_PUBLIC_SITE_URL: https://ci.example.invalid
         run: pnpm build
+
+  # Preserve the existing required check name while splitting its execution.
+  build-security:
+    name: Build & Security
+    needs: [dependency-security, production-build]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require security audit and production build success
+        env:
+          SECURITY_RESULT: ${{ needs.dependency-security.result }}
+          BUILD_RESULT: ${{ needs.production-build.result }}
+        run: |
+          echo "Dependency Security: $SECURITY_RESULT"
+          echo "Production Build: $BUILD_RESULT"
+          test "$SECURITY_RESULT" = success
+          test "$BUILD_RESULT" = success
+
+  overall-release-gate:
+    name: Overall Release Gate
+    needs:
+      - quality
+      - unit-tests
+      - supabase-integration
+      - e2e
+      - dependency-security
+      - production-build
+      - build-security
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require every release gate to succeed
+        env:
+          GATE_RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Release gate results: $GATE_RESULTS"
+          test -n "$GATE_RESULTS"
+          for result in $GATE_RESULTS; do
+            if [ "$result" != success ]; then
+              echo "::error::Every required job must succeed; found $result."
+              exit 1
+            fi
+          done
+          echo "All release gates passed."
