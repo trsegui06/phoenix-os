@@ -16,6 +16,7 @@ import { listTradingSetups } from "@/services/trading/trading-setups";
 const successes: Record<string, string> = {
   "account-created": "Trading Account created.",
   "account-updated": "Trading Account updated.",
+  "account-deleted": "Trading Account deleted.",
   "session-created": "Session created.",
   "session-updated": "Session updated.",
   "setup-created": "Setup created.",
@@ -27,6 +28,8 @@ const errors: Record<string, string> = {
   "not-found": "That record is unavailable.",
   profile: "Your trading workspace is not configured yet.",
   persistence: "The change could not be saved. Try again.",
+  "account-in-use":
+    "This account contains trading history and cannot be deleted. Set it inactive instead.",
 };
 
 export default async function TradingSettingsPage({

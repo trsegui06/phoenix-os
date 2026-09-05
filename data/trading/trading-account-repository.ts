@@ -62,13 +62,32 @@ export class TradingAccountRepository {
       .order("created_at", { ascending: false });
     return { accounts: data ? (data as Row[]).map(map) : null, error };
   }
-  async findByIdForCurrentTrader(id: string) {
+  async findByIdForCurrentTrader(id: string, traderId: string) {
     const { data, error } = await this.client
       .from("trading_accounts")
       .select(columns)
       .eq("id", id)
+      .eq("trader_id", traderId)
       .maybeSingle();
     return { account: data ? map(data as Row) : null, error };
+  }
+  async countTrades(id: string, traderId: string) {
+    const { count, error } = await this.client
+      .from("trades")
+      .select("id", { count: "exact", head: true })
+      .eq("trading_account_id", id)
+      .eq("trader_id", traderId);
+    return { count, error };
+  }
+  async deleteForCurrentTrader(id: string, traderId: string) {
+    const { data, error } = await this.client
+      .from("trading_accounts")
+      .delete()
+      .eq("id", id)
+      .eq("trader_id", traderId)
+      .select("id")
+      .maybeSingle();
+    return { deleted: Boolean(data), error };
   }
   async updateForCurrentTrader(id: string, input: UpdateTradingAccountInput) {
     const { data, error } = await this.client

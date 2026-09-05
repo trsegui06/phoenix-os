@@ -11,6 +11,7 @@ import {
 } from "@/app/actions/trading-settings";
 import { formatAccountMoney } from "@/lib/trading-settings";
 import { PendingSubmitButton } from "@/components/ui/pending-submit-button";
+import { DeleteAccountForm } from "./delete-account-form";
 
 const input =
   "mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white focus:border-phoenix-orange focus:outline-none";
@@ -168,6 +169,7 @@ export function AccountSettings({ accounts }: { accounts: TradingAccount[] }) {
                     Update Trading Account
                   </PendingSubmitButton>
                 </form>
+                <DeleteAccountForm accountId={account.id} />
               </details>
             </div>
           </article>

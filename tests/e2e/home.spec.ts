@@ -187,6 +187,42 @@ test("navigates the Trading shell and preserves mobile access", async ({ page })
   await expect(page).toHaveURL(/\/login$/);
 });
 
+test("requires confirmation before deleting an unused Trading Account", async ({ page }) => {
+  await page.goto("/login");
+  await signIn(page);
+  await expect(page).toHaveURL(/\/trading$/);
+  await page.goto("/trading/settings");
+  const createAccount = page.locator("details").filter({ hasText: "Add Account" });
+  await createAccount.getByText("Add Account").click();
+  await createAccount.getByLabel("Account Name").fill("Disposable E2E Account");
+  await createAccount.getByLabel("Broker").fill("Phoenix Broker");
+  await createAccount.getByLabel("Account Type").fill("cash");
+  await createAccount.getByLabel("Currency (3-letter code)").fill("EUR");
+  await createAccount.getByLabel("Initial Balance").fill("1000.00");
+  await createAccount.getByLabel("Status").fill("active");
+  await createAccount.getByRole("button", { name: "Create Trading Account" }).click();
+  await expect(page.getByText("Disposable E2E Account")).toBeVisible();
+  await page
+    .getByRole("article")
+    .filter({ hasText: "Disposable E2E Account" })
+    .getByText("Edit Account")
+    .click();
+  const deleteButton = page
+    .getByRole("article")
+    .filter({ hasText: "Disposable E2E Account" })
+    .getByRole("button", { name: "Delete account" });
+
+  page.once("dialog", (dialog) => dialog.dismiss());
+  await deleteButton.click();
+  await expect(page.getByText("Disposable E2E Account")).toBeVisible();
+
+  page.once("dialog", (dialog) => dialog.accept());
+  await deleteButton.click();
+  await expect(page).toHaveURL(/success=account-deleted/);
+  await expect(page.getByText("Trading Account deleted.")).toBeVisible();
+  await expect(page.getByText("Disposable E2E Account")).toHaveCount(0);
+});
+
 test("shows a generic error for invalid credentials", async ({ page }) => {
   await page.goto("/login");
   await page.getByLabel("Email").fill("missing@example.test");
