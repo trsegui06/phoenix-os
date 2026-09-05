@@ -2,10 +2,12 @@ import { createClient } from "@supabase/supabase-js";
 import { describe, expect, it } from "vitest";
 import {
   createTradingAccount,
+  deleteTradingAccount,
   getTradingAccount,
   listTradingAccounts,
   updateTradingAccount,
 } from "@/services/trading/trading-accounts";
+import { TradingAccountRepository } from "@/data/trading/trading-account-repository";
 import { TradingAccountApplicationError } from "@/services/trading/errors";
 
 const url = process.env.PHOENIX_SUPABASE_URL;
@@ -67,6 +69,74 @@ describe.skipIf(!enabled)("Trading Account local Supabase integration", () => {
     expect(await code(updateTradingAccount(clientB, accountA.id, { status: "blocked" }))).toBe(
       "TRADING_ACCOUNT_NOT_FOUND",
     );
+    expect(await code(deleteTradingAccount(clientB, accountA.id))).toBe(
+      "TRADING_ACCOUNT_NOT_FOUND",
+    );
+    expect(await code(deleteTradingAccount(clientA, crypto.randomUUID()))).toBe(
+      "TRADING_ACCOUNT_NOT_FOUND",
+    );
+
+    const empty = await createTradingAccount(clientA, {
+      ...input,
+      accountName: `Empty ${suffix}`,
+    });
+    await deleteTradingAccount(clientA, empty.id);
+    expect(await code(getTradingAccount(clientA, empty.id))).toBe("TRADING_ACCOUNT_NOT_FOUND");
+
+    const used = await createTradingAccount(clientA, {
+      ...input,
+      accountName: `Used ${suffix}`,
+    });
+    const session = await clientA
+      .from("sessions")
+      .insert({
+        trader_id: used.traderId,
+        session_date: "2026-09-05",
+        session_type: "regular",
+      })
+      .select("id")
+      .single();
+    expect(session.error).toBeNull();
+    const setup = await clientA
+      .from("setups")
+      .insert({
+        trader_id: used.traderId,
+        name: `Delete guard ${suffix}`,
+        timeframe: "5m",
+        entry_rules: "Enter",
+        exit_rules: "Exit",
+        validation_rules: "Validate",
+      })
+      .select("id")
+      .single();
+    expect(setup.error).toBeNull();
+    await clientA
+      .from("trades")
+      .insert({
+        trader_id: used.traderId,
+        trading_account_id: used.id,
+        session_id: session.data!.id,
+        setup_id: setup.data!.id,
+        trade_date: "2026-09-05",
+        asset: "EURUSD",
+        direction: "long",
+        entry_price: 1.1,
+        stop_loss: 1.09,
+        take_profit: 1.12,
+        position_size: 1,
+        risk_basis_points: 100,
+        result: "win",
+        pnl_cents: 100,
+        screenshots: [],
+      })
+      .throwOnError();
+    expect(await code(deleteTradingAccount(clientA, used.id))).toBe("TRADING_ACCOUNT_IN_USE");
+    const raceDefense = await new TradingAccountRepository(clientA).deleteForCurrentTrader(
+      used.id,
+      used.traderId,
+    );
+    expect(raceDefense).toMatchObject({ deleted: false, error: null });
+    expect((await getTradingAccount(clientA, used.id)).id).toBe(used.id);
     expect(await code(createTradingAccount(clientA, { ...input, accountName: "Updated" }))).toBe(
       "CONFLICT",
     );

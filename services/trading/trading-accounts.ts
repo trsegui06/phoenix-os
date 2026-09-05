@@ -38,8 +38,8 @@ export async function listTradingAccounts(c: PhoenixSupabaseClient) {
   return r.accounts!;
 }
 export async function getTradingAccount(c: PhoenixSupabaseClient, id: string) {
-  await resolveCurrentTraderId(c);
-  const r = await new TradingAccountRepository(c).findByIdForCurrentTrader(id);
+  const traderId = await resolveCurrentTraderId(c);
+  const r = await new TradingAccountRepository(c).findByIdForCurrentTrader(id, traderId);
   if (r.error) fail(r.error);
   if (!r.account)
     throw new TradingAccountApplicationError(
@@ -47,6 +47,46 @@ export async function getTradingAccount(c: PhoenixSupabaseClient, id: string) {
       "Trading Account not found.",
     );
   return r.account;
+}
+export async function deleteTradingAccount(c: PhoenixSupabaseClient, id: string) {
+  const traderId = await resolveCurrentTraderId(c);
+  const repository = new TradingAccountRepository(c);
+  const account = await repository.findByIdForCurrentTrader(id, traderId);
+  if (account.error) fail(account.error);
+  if (!account.account)
+    throw new TradingAccountApplicationError(
+      "TRADING_ACCOUNT_NOT_FOUND",
+      "Trading Account not found.",
+    );
+  const dependencies = await repository.countTrades(id, traderId);
+  if (dependencies.error) fail(dependencies.error);
+  if (dependencies.count !== 0)
+    throw new TradingAccountApplicationError(
+      "TRADING_ACCOUNT_IN_USE",
+      "This account contains trading history and cannot be deleted. Set it inactive instead.",
+    );
+  const result = await repository.deleteForCurrentTrader(id, traderId);
+  if (result.error) {
+    if (result.error.code === "23503")
+      throw new TradingAccountApplicationError(
+        "TRADING_ACCOUNT_IN_USE",
+        "This account contains trading history and cannot be deleted. Set it inactive instead.",
+      );
+    fail(result.error);
+  }
+  if (!result.deleted) {
+    const racedDependencies = await repository.countTrades(id, traderId);
+    if (racedDependencies.error) fail(racedDependencies.error);
+    if (racedDependencies.count !== 0)
+      throw new TradingAccountApplicationError(
+        "TRADING_ACCOUNT_IN_USE",
+        "This account contains trading history and cannot be deleted. Set it inactive instead.",
+      );
+    throw new TradingAccountApplicationError(
+      "TRADING_ACCOUNT_NOT_FOUND",
+      "Trading Account not found.",
+    );
+  }
 }
 export async function updateTradingAccount(
   c: PhoenixSupabaseClient,

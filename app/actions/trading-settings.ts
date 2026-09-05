@@ -13,7 +13,11 @@ import {
 } from "@/lib/trading-settings";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { TradingApplicationError } from "@/services/trading/errors";
-import { createTradingAccount, updateTradingAccount } from "@/services/trading/trading-accounts";
+import {
+  createTradingAccount,
+  deleteTradingAccount,
+  updateTradingAccount,
+} from "@/services/trading/trading-accounts";
 import { createTradingSession, updateTradingSession } from "@/services/trading/trading-sessions";
 import { createTradingSetup, updateTradingSetup } from "@/services/trading/trading-setups";
 
@@ -29,6 +33,7 @@ function safeError(error: unknown) {
     if (error.code === "UNAUTHENTICATED") return "unauthenticated";
     if (error.code === "TRADER_PROFILE_NOT_FOUND") return "profile";
     if (error.code === "CONFLICT") return "conflict";
+    if (error.code === "TRADING_ACCOUNT_IN_USE") return "account-in-use";
     if (error.code.endsWith("_NOT_FOUND")) return "not-found";
     if (error.code === "VALIDATION_ERROR") return "validation";
   }
@@ -68,6 +73,15 @@ export async function updateAccountFormAction(form: FormData) {
     await fail(error);
   }
   finish("account-updated");
+}
+
+export async function deleteAccountFormAction(form: FormData) {
+  try {
+    await deleteTradingAccount(await client(), String(form.get("id") ?? ""));
+  } catch (error) {
+    await fail(error);
+  }
+  finish("account-deleted");
 }
 
 export async function createSessionFormAction(form: FormData) {

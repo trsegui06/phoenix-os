@@ -82,7 +82,9 @@ describe.skipIf(!enabled)("Phoenix database privileges", () => {
     );
     for (const grant of grants) {
       const expected =
-        grant.role === "authenticated" && ["SELECT", "INSERT", "UPDATE"].includes(grant.privilege);
+        grant.role === "authenticated" &&
+        (["SELECT", "INSERT", "UPDATE"].includes(grant.privilege) ||
+          (grant.table === "trading_accounts" && grant.privilege === "DELETE"));
       expect(grant.granted, `${grant.role} ${grant.privilege} on ${grant.table}`).toBe(expected);
     }
   });
@@ -100,6 +102,18 @@ describe.skipIf(!enabled)("Phoenix database privileges", () => {
         true,
       );
     }
+  });
+
+  test("keeps Trading Account history protected by a restrictive inbound FK", () => {
+    expect(
+      query<string[]>(
+        `select json_agg(conname order by conname)
+         from pg_constraint
+         where confrelid = 'public.trading_accounts'::regclass
+           and contype = 'f'
+           and confdeltype = 'r'`,
+      ),
+    ).toEqual(["trades_trading_account_id_trader_id_fkey"]);
   });
 
   test("keeps only the intended authenticated SECURITY DEFINER RPC boundary", () => {
