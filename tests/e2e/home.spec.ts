@@ -13,9 +13,10 @@ async function signIn(
   await page.getByRole("button", { name: "Sign in" }).click();
 }
 
-test("renders the Phoenix OS foundation page", async ({ page }) => {
+test("routes an unauthenticated application launch to Login", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Phoenix OS" })).toBeVisible();
+  await expect(page).toHaveURL(/\/login$/);
+  await expect(page.getByRole("heading", { name: "Discipline before profit." })).toBeVisible();
 });
 
 test("publishes installable PWA metadata without registering a service worker", async ({
@@ -43,7 +44,7 @@ test("publishes installable PWA metadata without registering a service worker", 
     name: "Phoenix OS",
     short_name: "Phoenix OS",
     description: "Personal operating system for disciplined capital management.",
-    start_url: "/login",
+    start_url: "/",
     scope: "/",
     display: "standalone",
     background_color: "#0f172a",
@@ -382,6 +383,8 @@ test("redirects an authenticated user away from Login", async ({ page }) => {
   await expect(page).toHaveURL(/\/trading$/);
   await page.goto("/login");
   await expect(page).toHaveURL(/\/trading$/);
+  await page.goto("/");
+  await expect(page).toHaveURL(/\/trading$/);
 });
 
 test("routes an authenticated user without a Trader to onboarding", async ({ page }) => {
@@ -391,6 +394,8 @@ test("routes an authenticated user without a Trader to onboarding", async ({ pag
   await expect(
     page.getByRole("heading", { name: "Build your trading operating system" }),
   ).toBeVisible();
+  await page.goto("/");
+  await expect(page).toHaveURL(/\/onboarding$/);
   await page.goto("/trading/settings");
   await expect(page).toHaveURL(/\/onboarding$/);
   await expect(page.getByText("Add Account")).toHaveCount(0);
