@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Phoenix OS",
     short_name: "Phoenix OS",
     description: "Personal operating system for disciplined capital management.",
-    start_url: "/login",
+    start_url: "/",
     scope: "/",
     display: "standalone",
     background_color: "#0f172a",
