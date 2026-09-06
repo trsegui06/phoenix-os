@@ -40,6 +40,12 @@ export default async function NewTradePage() {
         title="New Trade"
         description="Record execution and reflection in one atomic entry."
       />
+      <Link
+        href="/trading/import"
+        className="mt-5 inline-flex min-h-11 items-center rounded-lg border border-slate-700 px-4 py-2 text-sm font-semibold text-white hover:border-slate-500"
+      >
+        Import historical Trades
+      </Link>
       {missing.length ? (
         <div
           role="status"

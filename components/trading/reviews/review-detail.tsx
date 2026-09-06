@@ -53,7 +53,9 @@ export function ReviewDetail({ review, trades, objectives }: Props) {
                 <p className="mt-1 text-sm text-slate-400">
                   {trade.direction} · {trade.result} · Risk{" "}
                   <span className="font-mono tabular-nums">
-                    {(trade.riskBasisPoints / 100).toFixed(2)}%
+                    {trade.riskBasisPoints === null
+                      ? "Unknown"
+                      : `${(trade.riskBasisPoints / 100).toFixed(2)}%`}
                   </span>
                 </p>
                 {trade.pnlLabel && (

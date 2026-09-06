@@ -33,7 +33,8 @@ const map = (row: Row): Trade => ({
   stopLoss: numeric(row.stop_loss, "stop_loss"),
   takeProfit: numeric(row.take_profit, "take_profit"),
   exitPrice: row.exit_price === null ? null : numeric(row.exit_price, "exit_price"),
-  riskBasisPoints: numeric(row.risk_basis_points, "risk_basis_points"),
+  riskBasisPoints:
+    row.risk_basis_points === null ? null : numeric(row.risk_basis_points, "risk_basis_points"),
   positionSize: numeric(row.position_size, "position_size"),
   result: String(row.result),
   pnlCents: cents(row.pnl_cents),

@@ -323,6 +323,52 @@ test("requires confirmation before deleting an unused Trading Account", async ({
   await expect(page.getByText("Disposable E2E Account")).toHaveCount(0);
 });
 
+test("previews, confirms, and de-duplicates a sanitized historical Trade import", async ({
+  page,
+}) => {
+  await page.goto("/login");
+  await signIn(page);
+  await page.getByRole("link", { name: "New Trade" }).click();
+  await page.getByRole("link", { name: "Import historical Trades" }).click();
+  await expect(page).toHaveURL(/\/trading\/import$/);
+  const ticket = `E2E-${Date.now()}`;
+  const csv = [
+    "Broker,Compte ID,Ticket,Heure d'ouverture,Heure de fermeture,Prix de fermeture,Symbole,Type,Lots,Prix d'entrée,Stop Loss,Take Profit,Commentaire,Profit net",
+    `RaiseGlobal-Live,E2E-SOURCE,${ticket},2026-08-17T08:00:00Z,2026-08-17T08:20:00Z,\"2405,00\",Gold,Buy,\"0,01\",\"2400,00\",\"2390,00\",\"2410,00\",AURUM TP1,\"10,00 €\"`,
+  ].join("\n");
+  await page.getByLabel("Historical Trade CSV").setInputFiles({
+    name: "raiseglobal-sanitized.csv",
+    mimeType: "text/csv",
+    buffer: Buffer.from(csv),
+  });
+  await page.getByRole("button", { name: "Analyze CSV" }).click();
+  await expect(page.getByText("1 wins · 0 losses · 0 breakeven")).toBeVisible();
+  await page
+    .getByLabel("Phoenix Trading Account")
+    .selectOption({ label: "E2E EUR Account — Phoenix Broker — EUR" });
+  await page.getByLabel("AURUM VIP Setup").selectOption({ label: "E2E Breakout — 5m" });
+  await page.getByLabel("Session for 2026-08-17").selectOption({ label: "2026-08-17 — regular" });
+  await page.getByRole("button", { name: "Preview import" }).click();
+  await expect(page.getByText(ticket)).toBeVisible();
+  await expect(page.getByText("Valid: 1 · Duplicates: 0 · Invalid: 0")).toBeVisible();
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.getByRole("button", { name: "Confirm import" }).click();
+  await expect(
+    page.getByText("Imported: 1 · Duplicates: 0 · Rejected: 0 · Failed: 0"),
+  ).toBeVisible();
+
+  await page.getByRole("button", { name: "Analyze CSV" }).click();
+  await expect(page.getByRole("button", { name: "Analyze CSV" })).toBeEnabled();
+  await page
+    .getByLabel("Phoenix Trading Account")
+    .selectOption({ label: "E2E EUR Account — Phoenix Broker — EUR" });
+  await page.getByLabel("AURUM VIP Setup").selectOption({ label: "E2E Breakout — 5m" });
+  await page.getByLabel("Session for 2026-08-17").selectOption({ label: "2026-08-17 — regular" });
+  await page.getByRole("button", { name: "Preview import" }).click();
+  await expect(page.getByText("Valid: 0 · Duplicates: 1 · Invalid: 0")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Confirm import" })).toBeDisabled();
+});
+
 test("shows a generic error for invalid credentials", async ({ page }) => {
   await page.goto("/login");
   await page.getByLabel("Email").fill("missing@example.test");
