@@ -18,6 +18,105 @@ test("renders the Phoenix OS foundation page", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Phoenix OS" })).toBeVisible();
 });
 
+test("publishes installable PWA metadata without registering a service worker", async ({
+  page,
+  request,
+}) => {
+  const manifestResponse = await request.get("/manifest.webmanifest");
+  expect(manifestResponse.ok()).toBe(true);
+  expect(manifestResponse.headers()["content-type"]).toMatch(/^application\/manifest\+json\b/);
+
+  const manifest = (await manifestResponse.json()) as {
+    id: string;
+    name: string;
+    short_name: string;
+    description: string;
+    start_url: string;
+    scope: string;
+    display: string;
+    background_color: string;
+    theme_color: string;
+    icons: Array<{ src: string; sizes: string; type: string; purpose: string }>;
+  };
+  expect(manifest).toMatchObject({
+    id: "/",
+    name: "Phoenix OS",
+    short_name: "Phoenix OS",
+    description: "Personal operating system for disciplined capital management.",
+    start_url: "/login",
+    scope: "/",
+    display: "standalone",
+    background_color: "#0f172a",
+    theme_color: "#0f172a",
+    icons: [
+      {
+        src: "/brand/app-icon-192x192.png",
+        sizes: "192x192",
+        type: "image/png",
+        purpose: "any",
+      },
+      {
+        src: "/brand/app-icon-512x512.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "any",
+      },
+    ],
+  });
+
+  for (const icon of manifest.icons) {
+    const response = await request.get(icon.src);
+    expect(response.ok()).toBe(true);
+    expect(response.headers()["content-type"]).toMatch(/^image\/png\b/);
+    const png = await response.body();
+    const [width, height] = icon.sizes.split("x").map(Number);
+    expect(png.readUInt32BE(16)).toBe(width);
+    expect(png.readUInt32BE(20)).toBe(height);
+  }
+
+  await page.goto(manifest.start_url);
+  await expect(page).toHaveURL(/\/login$/);
+  await expect(page.getByRole("heading", { name: "Discipline before profit." })).toBeVisible();
+  await expect(page.locator('link[rel="manifest"]')).toHaveAttribute(
+    "href",
+    "/manifest.webmanifest",
+  );
+  await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute("content", "#0f172a");
+  await expect(page.locator('meta[name="mobile-web-app-capable"]')).toHaveAttribute(
+    "content",
+    "yes",
+  );
+  await expect(page.locator('meta[name="apple-mobile-web-app-title"]')).toHaveAttribute(
+    "content",
+    "Phoenix OS",
+  );
+  await expect(page.locator('meta[name="apple-mobile-web-app-status-bar-style"]')).toHaveAttribute(
+    "content",
+    "black",
+  );
+  await expect(page.locator('link[rel="icon"][sizes="16x16"]')).toHaveAttribute(
+    "href",
+    "/brand/favicon-16x16.png",
+  );
+  await expect(page.locator('link[rel="icon"][sizes="32x32"]')).toHaveAttribute(
+    "href",
+    "/brand/favicon-32x32.png",
+  );
+  await expect(page.locator('link[rel="icon"][sizes="48x48"][type="image/png"]')).toHaveAttribute(
+    "href",
+    "/brand/favicon-48x48.png",
+  );
+  await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute(
+    "href",
+    "/brand/apple-touch-icon.png",
+  );
+  expect(
+    await page.evaluate(
+      async () => (await navigator.serviceWorker?.getRegistrations())?.length ?? 0,
+    ),
+  ).toBe(0);
+});
+
 test("associates public Auth validation errors with their fields", async ({ page }) => {
   await page.goto("/register");
   await page.getByRole("button", { name: "Create account" }).click();
