@@ -11,7 +11,7 @@ export type Trade = {
   stopLoss: number;
   takeProfit: number;
   exitPrice: number | null;
-  riskBasisPoints: number;
+  riskBasisPoints: number | null;
   positionSize: number;
   result: string;
   pnlCents: number | null;

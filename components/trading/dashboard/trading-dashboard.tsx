@@ -142,7 +142,11 @@ export function TradingDashboard({
       formatRate(overview.winRate),
       `${overview.winCount}W · ${overview.lossCount}L · ${overview.breakevenCount}BE`,
     ],
-    ["Average Risk", formatBasisPoints(overview.averageRiskBasisPoints), "All filtered trades"],
+    [
+      "Average Risk",
+      formatBasisPoints(overview.averageRiskBasisPoints),
+      "Trades with recorded risk",
+    ],
     [
       "Trade Error Rate",
       formatRate(overview.tradeErrorRate),
