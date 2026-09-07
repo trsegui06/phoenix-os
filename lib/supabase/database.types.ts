@@ -219,6 +219,8 @@ export type Database = {
       sessions: {
         Row: {
           created_at: string;
+          creation_import_batch_id: string | null;
+          creation_source: string;
           emotional_state: string | null;
           id: string;
           market_bias: string | null;
@@ -230,6 +232,8 @@ export type Database = {
         };
         Insert: {
           created_at?: string;
+          creation_import_batch_id?: string | null;
+          creation_source?: string;
           emotional_state?: string | null;
           id?: string;
           market_bias?: string | null;
@@ -241,6 +245,8 @@ export type Database = {
         };
         Update: {
           created_at?: string;
+          creation_import_batch_id?: string | null;
+          creation_source?: string;
           emotional_state?: string | null;
           id?: string;
           market_bias?: string | null;
@@ -600,6 +606,21 @@ export type Database = {
       replace_review_trade_links: {
         Args: { target_review_id: string; target_trade_ids?: string[] };
         Returns: undefined;
+      };
+      resolve_historical_import_sessions: {
+        Args: {
+          target_dates: string[];
+          target_import_batch_id: string;
+          target_selected_session_ids?: Json;
+          target_session_type: string;
+        };
+        Returns: {
+          resolution_status: string;
+          resolved_creation_source: string;
+          session_id: string;
+          session_type: string;
+          trade_date: string;
+        }[];
       };
       trading_error_breakdown: {
         Args: {

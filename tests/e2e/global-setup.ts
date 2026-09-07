@@ -70,6 +70,21 @@ export default async function globalSetup() {
           .from("sessions")
           .insert({ trader_id: traderId, session_date: "2026-08-17", session_type: "regular" })
           .throwOnError();
+      for (const sessionType of ["London", "New York"]) {
+        const ambiguousSession = await client
+          .from("sessions")
+          .select("id")
+          .eq("trader_id", traderId)
+          .eq("session_date", "2026-08-24")
+          .eq("session_type", sessionType)
+          .maybeSingle();
+        if (ambiguousSession.error) throw ambiguousSession.error;
+        if (!ambiguousSession.data)
+          await client
+            .from("sessions")
+            .insert({ trader_id: traderId, session_date: "2026-08-24", session_type: sessionType })
+            .throwOnError();
+      }
       const setup = await client
         .from("setups")
         .select("id")
