@@ -133,7 +133,7 @@ describe("Historical Trade import", () => {
     expect(() => parseCsvBytes(new TextEncoder().encode("A,A\nx,y"))).toThrow("duplicate headers");
     expect(() => parseCsvBytes(new Uint8Array(MAX_IMPORT_BYTES + 1))).toThrow("512 KiB");
     const header = csvLine([...raiseGlobalHeaders]);
-    const first = fixture.toString("utf8").trim().split("\n")[1]!;
+    const first = fixture.toString("utf8").trim().split("\n")[1]!.replace(/\r$/, "");
     expect(() =>
       analyzeTradeImport(new TextEncoder().encode(`${header}\n${first}\n${first}`)),
     ).toThrow("duplicate source Tickets");

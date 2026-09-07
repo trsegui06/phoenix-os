@@ -43,7 +43,6 @@ describe.skipIf(!enabled)("Historical Trade import local Supabase integration", 
       setupA: randomUUID(),
       setupB: randomUUID(),
       session17: randomUUID(),
-      session18: randomUUID(),
     };
     await a
       .from("traders")
@@ -95,20 +94,12 @@ describe.skipIf(!enabled)("Historical Trade import local Supabase integration", 
     }
     await a
       .from("sessions")
-      .insert([
-        {
-          id: ids.session17,
-          trader_id: ids.traderA,
-          session_date: "2026-08-17",
-          session_type: "regular",
-        },
-        {
-          id: ids.session18,
-          trader_id: ids.traderA,
-          session_date: "2026-08-18",
-          session_type: "regular",
-        },
-      ])
+      .insert({
+        id: ids.session17,
+        trader_id: ids.traderA,
+        session_date: "2026-08-17",
+        session_type: "regular",
+      })
       .throwOnError();
 
     const analysis = analyzeTradeImport(fixture);
@@ -116,11 +107,13 @@ describe.skipIf(!enabled)("Historical Trade import local Supabase integration", 
       tradingAccountId: ids.accountA,
       setupId: ids.setupA,
       asset: "XAUUSD" as const,
-      sessionIdsByDate: { "2026-08-17": ids.session17, "2026-08-18": ids.session18 },
+      historicalSessionType: "Historical import",
+      selectedSessionIdsByDate: {},
     };
     const preview = await previewTradeImport(a, fixture, analysis.fileHash, mapping);
-    expect(preview).toHaveLength(5);
-    expect(preview.every((row) => row.riskStatus === "unknown" && !row.duplicate)).toBe(true);
+    expect(preview.rows).toHaveLength(5);
+    expect(preview.sessionPlan).toMatchObject({ existing: 1, toCreate: 1, ambiguous: 0 });
+    expect(preview.rows.every((row) => row.riskStatus === "unknown" && !row.duplicate)).toBe(true);
 
     await expect(
       previewTradeImport(a, fixture, analysis.fileHash, {
@@ -129,22 +122,18 @@ describe.skipIf(!enabled)("Historical Trade import local Supabase integration", 
       }),
     ).rejects.toThrow("owned Phoenix Trading Account");
     expect(await executeTradeImport(a, fixture, analysis.fileHash, mapping)).toMatchObject({
-      imported: 5,
-      duplicates: 0,
-      rejected: 0,
-      failed: 0,
+      sessions: { existingMapped: 1, created: 1 },
+      trades: { imported: 5, duplicates: 0, rejected: 0, failed: 0 },
     });
     expect(await executeTradeImport(a, fixture, analysis.fileHash, mapping)).toMatchObject({
-      imported: 0,
-      duplicates: 5,
-      rejected: 0,
-      failed: 0,
+      sessions: { existingMapped: 2, created: 0 },
+      trades: { imported: 0, duplicates: 5, rejected: 0, failed: 0 },
     });
 
     const imported = await a
       .from("trades")
       .select(
-        "risk_basis_points,import_source,external_trade_id,import_batch_id,import_metadata,pnl_cents",
+        "trade_date,session_id,risk_basis_points,import_source,external_trade_id,import_batch_id,import_metadata,pnl_cents",
       )
       .eq("trading_account_id", ids.accountA);
     expect(imported.error).toBeNull();
@@ -157,6 +146,20 @@ describe.skipIf(!enabled)("Historical Trade import local Supabase integration", 
           row.external_trade_id &&
           row.import_batch_id,
       ),
+    ).toBe(true);
+    const createdSession = await a
+      .from("sessions")
+      .select("id,creation_source,creation_import_batch_id")
+      .eq("trader_id", ids.traderA)
+      .eq("session_date", "2026-08-18")
+      .single();
+    expect(createdSession.error).toBeNull();
+    expect(createdSession.data).toMatchObject({ creation_source: "historical_import" });
+    expect(createdSession.data!.creation_import_batch_id).toBeTruthy();
+    expect(
+      imported
+        .data!.filter((row) => row.trade_date === "2026-08-18")
+        .every((row) => row.session_id === createdSession.data!.id),
     ).toBe(true);
     expect(
       (await b.from("trades").select("id").in("external_trade_id", ["SAN-1001", "SAN-1002"])).data,

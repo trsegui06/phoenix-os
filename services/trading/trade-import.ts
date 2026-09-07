@@ -1,21 +1,26 @@
 import { createHash, randomUUID } from "node:crypto";
 
+import type {
+  HistoricalSessionPlan,
+  HistoricalSessionResult,
+} from "@/domain/trading/historical-session";
+import { validateImportedTrade } from "@/domain/trading/trade-import";
 import type { Json } from "@/lib/supabase/database.types";
 import type { PhoenixSupabaseClient } from "@/lib/supabase/types";
-import { validateImportedTrade } from "@/domain/trading/trade-import";
-import { CsvImportError, parseCsvBytes } from "@/lib/trading-import/csv-parser";
 import { raiseGlobalAdapter } from "@/lib/trading-import/adapters/raiseglobal";
+import { CsvImportError, parseCsvBytes } from "@/lib/trading-import/csv-parser";
 import type { NormalizedTradeImportCandidate } from "@/lib/trading-import/source-adapter";
 import { resolveCurrentTraderId } from "./current-trader";
+import { planHistoricalSessions, resolveHistoricalSessions } from "./historical-sessions";
 import { listTradingAccounts } from "./trading-accounts";
-import { listTradingSessions } from "./trading-sessions";
 import { listTradingSetups } from "./trading-setups";
 
 export type TradeImportMapping = {
   tradingAccountId: string;
   setupId: string;
   asset: "XAUUSD";
-  sessionIdsByDate: Record<string, string>;
+  historicalSessionType: string;
+  selectedSessionIdsByDate: Record<string, string>;
 };
 
 export type TradeImportAnalysis = {
@@ -36,10 +41,28 @@ export type TradeImportAnalysis = {
 export type TradeImportPreviewRow = NormalizedTradeImportCandidate & {
   mappedAsset: "XAUUSD";
   tradingAccountId: string;
-  sessionId: string;
+  sessionId: string | null;
+  sessionType: string;
+  sessionStatus: "Existing" | "Will create" | "Action required";
   setupId: string;
   riskStatus: "unknown";
   duplicate: boolean;
+};
+
+export type TradeImportPreview = {
+  sessionPlan: HistoricalSessionPlan;
+  rows: TradeImportPreviewRow[];
+};
+
+export type TradeImportExecutionSummary = {
+  sessions: HistoricalSessionResult;
+  trades: {
+    imported: number;
+    duplicates: number;
+    rejected: number;
+    failed: number;
+    reasons: string[];
+  };
 };
 
 function parseCandidates(bytes: Uint8Array) {
@@ -74,26 +97,16 @@ export function analyzeTradeImport(bytes: Uint8Array): TradeImportAnalysis {
   };
 }
 
-async function validateMapping(
-  client: PhoenixSupabaseClient,
-  mapping: TradeImportMapping,
-  dates: string[],
-) {
+async function validateContext(client: PhoenixSupabaseClient, mapping: TradeImportMapping) {
   if (mapping.asset !== "XAUUSD") throw new CsvImportError("Confirm the Gold to XAUUSD mapping.");
-  const [accounts, sessions, setups] = await Promise.all([
+  const [accounts, setups] = await Promise.all([
     listTradingAccounts(client),
-    listTradingSessions(client),
     listTradingSetups(client),
   ]);
   if (!accounts.some((account) => account.id === mapping.tradingAccountId))
     throw new CsvImportError("Select an owned Phoenix Trading Account.");
   if (!setups.some((setup) => setup.id === mapping.setupId))
     throw new CsvImportError("Select an owned Phoenix Setup.");
-  for (const date of dates) {
-    const session = sessions.find((candidate) => candidate.id === mapping.sessionIdsByDate[date]);
-    if (!session || session.sessionDate !== date)
-      throw new CsvImportError(`Select an owned Phoenix Session dated ${date}.`);
-  }
 }
 
 async function duplicateTickets(
@@ -113,7 +126,53 @@ async function duplicateTickets(
       candidates.map((candidate) => candidate.externalTradeId),
     );
   if (error) throw new CsvImportError("Existing imported Trades could not be checked.");
-  return new Set((data ?? []).map((row) => row.external_trade_id).filter(Boolean));
+  return new Set(
+    (data ?? [])
+      .map((row) => row.external_trade_id)
+      .filter((ticket): ticket is string => Boolean(ticket)),
+  );
+}
+
+function checkedCandidates(bytes: Uint8Array, expectedHash: string) {
+  const actualHash = createHash("sha256").update(bytes).digest("hex");
+  if (actualHash !== expectedHash)
+    throw new CsvImportError("The selected CSV changed after analysis.");
+  return parseCandidates(bytes);
+}
+
+function previewRows(
+  candidates: NormalizedTradeImportCandidate[],
+  mapping: TradeImportMapping,
+  sessionPlan: HistoricalSessionPlan,
+  duplicates: Set<string>,
+): TradeImportPreviewRow[] {
+  return candidates.map((candidate) => {
+    const resolution = sessionPlan.resolutions.find((item) => item.date === candidate.tradeDate)!;
+    const selected =
+      resolution.state === "ambiguous" && resolution.selectedSessionId
+        ? resolution.candidates.find((item) => item.id === resolution.selectedSessionId)
+        : null;
+    const session = resolution.state === "existing" ? resolution.session : selected;
+    return {
+      ...candidate,
+      mappedAsset: mapping.asset,
+      tradingAccountId: mapping.tradingAccountId,
+      sessionId: session?.id ?? null,
+      sessionType:
+        session?.sessionType ??
+        (resolution.state === "to-create"
+          ? resolution.proposedSessionType
+          : "Select an existing Session"),
+      sessionStatus: session
+        ? "Existing"
+        : resolution.state === "to-create"
+          ? "Will create"
+          : "Action required",
+      setupId: mapping.setupId,
+      riskStatus: "unknown",
+      duplicate: duplicates.has(candidate.externalTradeId),
+    };
+  });
 }
 
 export async function previewTradeImport(
@@ -121,24 +180,21 @@ export async function previewTradeImport(
   bytes: Uint8Array,
   expectedHash: string,
   mapping: TradeImportMapping,
-) {
+): Promise<TradeImportPreview> {
   await resolveCurrentTraderId(client);
-  const actualHash = createHash("sha256").update(bytes).digest("hex");
-  if (actualHash !== expectedHash)
-    throw new CsvImportError("The selected CSV changed after analysis.");
-  const candidates = parseCandidates(bytes);
+  const candidates = checkedCandidates(bytes, expectedHash);
   const dates = [...new Set(candidates.map((candidate) => candidate.tradeDate))];
-  await validateMapping(client, mapping, dates);
-  const duplicates = await duplicateTickets(client, mapping, candidates);
-  return candidates.map((candidate): TradeImportPreviewRow => ({
-    ...candidate,
-    mappedAsset: mapping.asset,
-    tradingAccountId: mapping.tradingAccountId,
-    sessionId: mapping.sessionIdsByDate[candidate.tradeDate]!,
-    setupId: mapping.setupId,
-    riskStatus: "unknown",
-    duplicate: duplicates.has(candidate.externalTradeId),
-  }));
+  await validateContext(client, mapping);
+  const [sessionPlan, duplicates] = await Promise.all([
+    planHistoricalSessions(
+      client,
+      dates,
+      mapping.historicalSessionType,
+      mapping.selectedSessionIdsByDate,
+    ),
+    duplicateTickets(client, mapping, candidates),
+  ]);
+  return { sessionPlan, rows: previewRows(candidates, mapping, sessionPlan, duplicates) };
 }
 
 export async function executeTradeImport(
@@ -146,21 +202,43 @@ export async function executeTradeImport(
   bytes: Uint8Array,
   expectedHash: string,
   mapping: TradeImportMapping,
-) {
-  const rows = await previewTradeImport(client, bytes, expectedHash, mapping);
+): Promise<TradeImportExecutionSummary> {
+  await resolveCurrentTraderId(client);
+  const candidates = checkedCandidates(bytes, expectedHash);
+  const dates = [...new Set(candidates.map((candidate) => candidate.tradeDate))];
+  await validateContext(client, mapping);
   const batchId = randomUUID();
-  const summary = { imported: 0, duplicates: 0, rejected: 0, failed: 0, reasons: [] as string[] };
-  for (const row of rows) {
-    if (row.duplicate) {
-      summary.duplicates += 1;
+  const sessions = await resolveHistoricalSessions(client, {
+    dates,
+    sessionType: mapping.historicalSessionType,
+    importBatchId: batchId,
+    selectedSessionIdsByDate: mapping.selectedSessionIdsByDate,
+  });
+  const duplicates = await duplicateTickets(client, mapping, candidates);
+  const trades = {
+    imported: 0,
+    duplicates: 0,
+    rejected: 0,
+    failed: 0,
+    reasons: [] as string[],
+  };
+  for (const row of candidates) {
+    if (duplicates.has(row.externalTradeId)) {
+      trades.duplicates += 1;
+      continue;
+    }
+    const sessionId = sessions.mappings[row.tradeDate];
+    if (!sessionId) {
+      trades.rejected += 1;
+      trades.reasons.push(`Ticket ${row.externalTradeId}: Session resolution is missing.`);
       continue;
     }
     const trade = validateImportedTrade({
-      tradingAccountId: row.tradingAccountId,
-      sessionId: row.sessionId,
-      setupId: row.setupId,
+      tradingAccountId: mapping.tradingAccountId,
+      sessionId,
+      setupId: mapping.setupId,
       tradeDate: row.tradeDate,
-      asset: row.mappedAsset,
+      asset: mapping.asset,
       direction: row.direction,
       entryPrice: Number(row.entryPrice),
       stopLoss: Number(row.stopLoss),
@@ -199,7 +277,6 @@ export async function executeTradeImport(
       target_entry_price: trade.entryPrice,
       target_stop_loss: trade.stopLoss,
       target_take_profit: trade.takeProfit,
-      // Supabase's generator cannot express nullable PostgreSQL function arguments.
       target_risk_basis_points: null as never,
       target_position_size: trade.positionSize,
       target_result: trade.result,
@@ -213,12 +290,12 @@ export async function executeTradeImport(
       target_import_batch_id: trade.provenance.batchId,
       target_import_metadata: trade.provenance.metadata as Json,
     });
-    if (!error && data) summary.imported += 1;
-    else if (error?.code === "23505") summary.duplicates += 1;
+    if (!error && data) trades.imported += 1;
+    else if (error?.code === "23505") trades.duplicates += 1;
     else {
-      summary.failed += 1;
-      summary.reasons.push(`Ticket ${row.externalTradeId}: could not be imported.`);
+      trades.failed += 1;
+      trades.reasons.push(`Ticket ${row.externalTradeId}: could not be imported.`);
     }
   }
-  return summary;
+  return { sessions, trades };
 }

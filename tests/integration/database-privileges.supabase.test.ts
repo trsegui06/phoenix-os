@@ -23,6 +23,7 @@ const phoenixFunctions = [
   "is_current_trader",
   "replace_review_objective_links",
   "replace_review_trade_links",
+  "resolve_historical_import_sessions",
   "trading_error_breakdown",
   "trading_statistics_by_asset",
   "trading_statistics_by_session_type",

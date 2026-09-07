@@ -5,7 +5,6 @@ import { TradeImportWorkflow } from "@/components/trading/import/trade-import-wo
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { resolveCurrentTraderId } from "@/services/trading/current-trader";
 import { listTradingAccounts } from "@/services/trading/trading-accounts";
-import { listTradingSessions } from "@/services/trading/trading-sessions";
 import { listTradingSetups } from "@/services/trading/trading-setups";
 
 export default async function HistoricalTradeImportPage() {
@@ -16,9 +15,8 @@ export default async function HistoricalTradeImportPage() {
   } = await client.auth.getUser();
   if (!user) redirect("/login");
   await resolveCurrentTraderId(client);
-  const [accounts, sessions, setups] = await Promise.all([
+  const [accounts, setups] = await Promise.all([
     listTradingAccounts(client),
-    listTradingSessions(client),
     listTradingSetups(client),
   ]);
   return (
@@ -33,11 +31,6 @@ export default async function HistoricalTradeImportPage() {
           accounts={accounts.map((account) => ({
             id: account.id,
             label: `${account.accountName} — ${account.broker} — ${account.currency}`,
-          }))}
-          sessions={sessions.map((session) => ({
-            id: session.id,
-            date: session.sessionDate,
-            label: `${session.sessionDate} — ${session.sessionType}`,
           }))}
           setups={setups.map((setup) => ({
             id: setup.id,

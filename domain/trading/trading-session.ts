@@ -6,6 +6,8 @@ export type TradingSession = {
   marketBias: string | null;
   emotionalState: string | null;
   notes: string | null;
+  creationSource: "manual" | "historical_import";
+  creationImportBatchId: string | null;
   createdAt: string;
   updatedAt: string;
 };

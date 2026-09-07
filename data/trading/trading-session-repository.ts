@@ -7,7 +7,7 @@ import type {
 } from "@/domain/trading/trading-session";
 type R = Record<string, unknown>;
 const c =
-  "id,trader_id,session_date,session_type,market_bias,emotional_state,notes,created_at,updated_at";
+  "id,trader_id,session_date,session_type,market_bias,emotional_state,notes,creation_source,creation_import_batch_id,created_at,updated_at";
 const map = (r: R): TradingSession => ({
   id: String(r.id),
   traderId: String(r.trader_id),
@@ -16,6 +16,8 @@ const map = (r: R): TradingSession => ({
   marketBias: r.market_bias ? String(r.market_bias) : null,
   emotionalState: r.emotional_state ? String(r.emotional_state) : null,
   notes: r.notes ? String(r.notes) : null,
+  creationSource: String(r.creation_source) as "manual" | "historical_import",
+  creationImportBatchId: r.creation_import_batch_id ? String(r.creation_import_batch_id) : null,
   createdAt: String(r.created_at),
   updatedAt: String(r.updated_at),
 });
@@ -46,6 +48,29 @@ export class TradingSessionRepository {
       .order("session_date", { ascending: false })
       .order("created_at", { ascending: false });
     return { sessions: data ? (data as R[]).map(map) : null, error };
+  }
+  async listByDatesForCurrentTrader(dates: string[]) {
+    const { data, error } = await this.client
+      .from("sessions")
+      .select(c)
+      .in("session_date", dates)
+      .order("session_date", { ascending: true })
+      .order("created_at", { ascending: true });
+    return { sessions: data ? (data as R[]).map(map) : null, error };
+  }
+  async resolveHistoricalImport(input: {
+    dates: string[];
+    sessionType: string;
+    importBatchId: string;
+    selectedSessionIdsByDate: Record<string, string>;
+  }) {
+    const { data, error } = await this.client.rpc("resolve_historical_import_sessions", {
+      target_dates: input.dates,
+      target_session_type: input.sessionType,
+      target_import_batch_id: input.importBatchId,
+      target_selected_session_ids: input.selectedSessionIdsByDate,
+    });
+    return { rows: data, error };
   }
   async findByIdForCurrentTrader(id: string) {
     const { data, error } = await this.client.from("sessions").select(c).eq("id", id).maybeSingle();

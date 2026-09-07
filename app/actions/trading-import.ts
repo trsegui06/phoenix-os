@@ -24,7 +24,10 @@ function mapping(formData: FormData): TradeImportMapping {
       tradingAccountId: String(formData.get("tradingAccountId") ?? ""),
       setupId: String(formData.get("setupId") ?? ""),
       asset: String(formData.get("asset") ?? "") as "XAUUSD",
-      sessionIdsByDate: JSON.parse(String(formData.get("sessionIdsByDate") ?? "{}")),
+      historicalSessionType: String(formData.get("historicalSessionType") ?? ""),
+      selectedSessionIdsByDate: JSON.parse(
+        String(formData.get("selectedSessionIdsByDate") ?? "{}"),
+      ),
     };
   } catch {
     throw new CsvImportError("The import mappings are malformed.");
@@ -57,13 +60,13 @@ export async function analyzeTradeImportAction(formData: FormData) {
 
 export async function previewTradeImportAction(formData: FormData) {
   try {
-    const rows = await previewTradeImport(
+    const preview = await previewTradeImport(
       await client(),
       await input(formData),
       String(formData.get("fileHash") ?? ""),
       mapping(formData),
     );
-    return { ok: true as const, rows };
+    return { ok: true as const, preview };
   } catch (error) {
     return { ok: false as const, error: message(error) };
   }
