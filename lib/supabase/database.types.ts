@@ -360,6 +360,7 @@ export type Database = {
           created_at: string;
           experience_level: string | null;
           id: string;
+          locale: string;
           name: string;
           timezone: string;
           updated_at: string;
@@ -369,6 +370,7 @@ export type Database = {
           created_at?: string;
           experience_level?: string | null;
           id?: string;
+          locale?: string;
           name: string;
           timezone: string;
           updated_at?: string;
@@ -378,6 +380,7 @@ export type Database = {
           created_at?: string;
           experience_level?: string | null;
           id?: string;
+          locale?: string;
           name?: string;
           timezone?: string;
           updated_at?: string;
