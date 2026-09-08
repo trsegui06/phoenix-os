@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import type { ReactNode } from "react";
 import "./globals.css";
 
@@ -35,10 +37,16 @@ export const viewport: Viewport = {
   themeColor: "#0f172a",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
+  const [locale, messages] = await Promise.all([getLocale(), getMessages()]);
+
   return (
-    <html lang="fr">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>{children}</body>
+    <html lang={locale}>
+      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          {children}
+        </NextIntlClientProvider>
+      </body>
     </html>
   );
 }

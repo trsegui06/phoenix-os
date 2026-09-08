@@ -1,7 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
 import { describe, expect, it } from "vitest";
 import type { Database } from "@/lib/supabase/database.types";
-import { provisionCurrentTrader } from "@/services/trading/trader-provisioning";
+import {
+  provisionCurrentTrader,
+  updateCurrentTraderLocale,
+} from "@/services/trading/trader-provisioning";
 
 const url = process.env.PHOENIX_SUPABASE_URL;
 const key = process.env.PHOENIX_SUPABASE_ANON_KEY;
@@ -20,8 +23,13 @@ describe.skipIf(!(url && key))("Trader provisioning local Supabase integration",
   it("binds ownership to auth.uid and permits exactly one Trader", async () => {
     const { client, userId } = await signedUpClient("owner");
     const trader = await provisionCurrentTrader(client, { name: "Owner", timezone: "UTC" });
-    const stored = await client.from("traders").select("auth_user_id").eq("id", trader.id).single();
+    const stored = await client
+      .from("traders")
+      .select("auth_user_id,locale")
+      .eq("id", trader.id)
+      .single();
     expect(stored.data?.auth_user_id).toBe(userId);
+    expect(stored.data?.locale).toBe("en");
     await expect(
       provisionCurrentTrader(client, { name: "Again", timezone: "UTC" }),
     ).rejects.toMatchObject({ code: "CONFLICT" });
@@ -52,5 +60,42 @@ describe.skipIf(!(url && key))("Trader provisioning local Supabase integration",
     await expect(
       provisionCurrentTrader(anonymous, { name: "Anon", timezone: "UTC" }),
     ).rejects.toMatchObject({ code: "UNAUTHENTICATED" });
+  });
+
+  it("persists a supported locale and keeps locale updates inside the authenticated Trader", async () => {
+    const owner = await signedUpClient("locale-owner");
+    const other = await signedUpClient("locale-other");
+    const trader = await provisionCurrentTrader(owner.client, {
+      name: "Locale owner",
+      timezone: "UTC",
+      locale: "fr",
+    });
+    await provisionCurrentTrader(other.client, {
+      name: "Other owner",
+      timezone: "UTC",
+      locale: "en",
+    });
+
+    await expect(updateCurrentTraderLocale(owner.client, "es")).resolves.toBe("es");
+    const stored = await owner.client.from("traders").select("locale").eq("id", trader.id).single();
+    expect(stored.data?.locale).toBe("es");
+
+    const crossTenant = await other.client
+      .from("traders")
+      .update({ locale: "fr" })
+      .eq("id", trader.id)
+      .select("id");
+    expect(crossTenant.error).toBeNull();
+    expect(crossTenant.data).toEqual([]);
+    expect(
+      (await owner.client.from("traders").select("locale").eq("id", trader.id).single()).data
+        ?.locale,
+    ).toBe("es");
+
+    const unsupported = await owner.client
+      .from("traders")
+      .update({ locale: "de" })
+      .eq("id", trader.id);
+    expect(unsupported.error?.code).toBe("23514");
   });
 });

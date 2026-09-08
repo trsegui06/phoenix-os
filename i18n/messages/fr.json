@@ -1,0 +1,16 @@
+{
+  "settings": {
+    "language": {
+      "title": "Langue",
+      "description": "Choisissez la langue utilisée par Phoenix OS.",
+      "label": "Langue de l’application",
+      "english": "English",
+      "french": "Français",
+      "spanish": "Español",
+      "saving": "Enregistrement de la langue…",
+      "saved": "Préférence de langue enregistrée.",
+      "invalid": "Choisissez une langue prise en charge.",
+      "error": "La préférence de langue n’a pas pu être enregistrée. Réessayez."
+    }
+  }
+}

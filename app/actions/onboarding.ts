@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { getLocale } from "next-intl/server";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import {
   adaptCreateAccountForm,
@@ -60,6 +61,7 @@ export async function provisionTraderAction(
     await provisionCurrentTrader(client, {
       name: String(form.get("name") ?? ""),
       timezone: String(form.get("timezone") ?? ""),
+      locale: await getLocale(),
     });
   } catch (error) {
     if (error instanceof TradingApplicationError) {

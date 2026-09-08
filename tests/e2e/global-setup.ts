@@ -38,6 +38,7 @@ export default async function globalSetup() {
         if (profile.error) throw profile.error;
         traderId = profile.data.id;
       }
+      await client.from("traders").update({ locale: "en" }).eq("id", traderId).throwOnError();
       const account = await client
         .from("trading_accounts")
         .select("id")

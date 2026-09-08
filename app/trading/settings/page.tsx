@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getLocale } from "next-intl/server";
 import { PageHeader } from "@/components/navigation/page-header";
+import { LanguageSelector } from "@/components/trading/settings/language-selector";
+import { isLocale, defaultLocale } from "@/i18n/config";
 import {
   AccountSettings,
   SessionSettings,
@@ -50,10 +53,11 @@ export default async function TradingSettingsPage({
       redirect("/onboarding");
     throw error;
   }
-  const [accounts, sessions, setups] = await Promise.all([
+  const [accounts, sessions, setups, locale] = await Promise.all([
     listTradingAccounts(client),
     listTradingSessions(client),
     listTradingSetups(client),
+    getLocale(),
   ]);
   const ready = accounts.length > 0 && sessions.length > 0 && setups.length > 0;
   const search = await searchParams;
@@ -108,6 +112,7 @@ export default async function TradingSettingsPage({
         </div>
       </section>
       <div className="mt-8 grid gap-6">
+        <LanguageSelector currentLocale={isLocale(locale) ? locale : defaultLocale} />
         <AccountSettings accounts={accounts} />
         <SessionSettings sessions={sessions} />
         <SetupSettings setups={setups} />

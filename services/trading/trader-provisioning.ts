@@ -5,6 +5,7 @@ import {
   type CreateTraderInput,
 } from "@/domain/trading/trader";
 import type { PhoenixSupabaseClient } from "@/lib/supabase/types";
+import { defaultLocale, isLocale, type Locale } from "@/i18n/config";
 import { TradingApplicationError } from "./errors";
 
 async function currentUserId(client: PhoenixSupabaseClient) {
@@ -25,7 +26,7 @@ export async function hasCurrentTrader(client: PhoenixSupabaseClient) {
 
 export async function provisionCurrentTrader(
   client: PhoenixSupabaseClient,
-  input: CreateTraderInput,
+  input: CreateTraderInput & { locale?: string },
 ) {
   try {
     const userId = await currentUserId(client);
@@ -38,7 +39,11 @@ export async function provisionCurrentTrader(
       );
     if (existing.data)
       throw new TradingApplicationError("CONFLICT", "A Trader profile already exists.");
-    const result = await repository.createForAuthUser(userId, validateCreateTrader(input));
+    const trader = validateCreateTrader(input);
+    const result = await repository.createForAuthUser(userId, {
+      ...trader,
+      locale: isLocale(input.locale) ? input.locale : defaultLocale,
+    });
     if (result.error) {
       if (result.error.code === "23505")
         throw new TradingApplicationError("CONFLICT", "A Trader profile already exists.");
@@ -53,4 +58,22 @@ export async function provisionCurrentTrader(
       throw new TradingApplicationError("VALIDATION_ERROR", error.message);
     throw error;
   }
+}
+
+export async function updateCurrentTraderLocale(client: PhoenixSupabaseClient, locale: Locale) {
+  const userId = await currentUserId(client);
+  const result = await new TraderRepository(client).updateLocaleForAuthUser(userId, locale);
+  if (result.error) {
+    if (result.error.code === "PGRST116") {
+      throw new TradingApplicationError(
+        "TRADER_PROFILE_NOT_FOUND",
+        "A Trader profile is required.",
+      );
+    }
+    throw new TradingApplicationError(
+      "PERSISTENCE_ERROR",
+      "The language preference could not be saved.",
+    );
+  }
+  return result.data.locale as Locale;
 }

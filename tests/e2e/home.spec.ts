@@ -26,6 +26,45 @@ test("routes an unauthenticated application launch to Login", async ({ page }) =
   await expect(page.getByRole("heading", { name: "Discipline before profit." })).toBeVisible();
 });
 
+test("resolves a supported browser language before authentication", async ({ browser }) => {
+  const context = await browser.newContext({ locale: "fr-FR" });
+  const page = await context.newPage();
+  await page.goto("/login");
+  await expect(page.locator("html")).toHaveAttribute("lang", "fr");
+  await context.close();
+});
+
+test("persists the authenticated Trader language across sessions", async ({ page, browser }) => {
+  await page.goto("/login");
+  await signIn(page, e2eUser);
+  await expect(page).toHaveURL(/\/trading$/);
+  await page.goto("/trading/settings");
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await expect(page.getByRole("heading", { name: "Language" })).toBeVisible();
+
+  await page.getByLabel("Application language").selectOption("fr");
+  await expect(page.locator("html")).toHaveAttribute("lang", "fr");
+  await expect(page.getByRole("heading", { name: "Langue" })).toBeVisible();
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("lang", "fr");
+
+  await page.getByLabel("Langue de l’application").selectOption("es");
+  await expect(page.locator("html")).toHaveAttribute("lang", "es");
+  await expect(page.getByRole("heading", { name: "Idioma" })).toBeVisible();
+
+  const secondContext = await browser.newContext({ locale: "en-US" });
+  const secondPage = await secondContext.newPage();
+  await secondPage.goto("/login");
+  await signIn(secondPage, e2eUser);
+  await expect(secondPage).toHaveURL(/\/trading$/);
+  await secondPage.goto("/trading/settings");
+  await expect(secondPage.locator("html")).toHaveAttribute("lang", "es");
+  await expect(secondPage.getByRole("heading", { name: "Idioma" })).toBeVisible();
+  await secondPage.getByLabel("Idioma de la aplicación").selectOption("en");
+  await expect(secondPage.locator("html")).toHaveAttribute("lang", "en");
+  await secondContext.close();
+});
+
 test("publishes installable PWA metadata without registering a service worker", async ({
   page,
   request,
