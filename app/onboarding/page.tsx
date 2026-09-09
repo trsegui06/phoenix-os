@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { OnboardingForm } from "@/components/onboarding/onboarding-form";
 import { BrandLockup } from "@/components/ui/phoenix-mark";
 import { resolveOnboardingStep } from "@/lib/onboarding";
@@ -8,35 +9,12 @@ import { listTradingAccounts } from "@/services/trading/trading-accounts";
 import { listTradingSessions } from "@/services/trading/trading-sessions";
 import { listTradingSetups } from "@/services/trading/trading-setups";
 
-const content = {
-  welcome: {
-    eyebrow: "Step 1 / 3 · Welcome",
-    title: "Build your trading operating system",
-    description: "Create the private workspace that will support a disciplined trading process.",
-  },
-  account: {
-    eyebrow: "Step 2 / 3 · First Trading Account",
-    title: "Add your first Trading Account",
-    description: "Define where your Trades and currency-scoped results belong.",
-  },
-  environment: {
-    eyebrow: "Step 3 / 3 · Trading Environment",
-    title: "Configure your trading environment",
-    description: "Add the Session context and repeatable Setup required for disciplined execution.",
-  },
-  complete: {
-    eyebrow: "Setup complete",
-    title: "Your trading environment is ready",
-    description:
-      "Continue to your Dashboard. Missing prerequisites can still be completed in Trading Setup.",
-  },
-} as const;
-
 export default async function OnboardingPage({
   searchParams,
 }: {
   searchParams: Promise<{ step?: string }>;
 }) {
+  const t = await getTranslations("onboarding");
   const client = await getSupabaseServerClient();
   if (!client) redirect("/login");
   const {
@@ -61,7 +39,11 @@ export default async function OnboardingPage({
     },
     (await searchParams).step,
   );
-  const copy = content[step];
+  const copy = {
+    eyebrow: t(`${step}.eyebrow`),
+    title: t(`${step}.title`),
+    description: t(`${step}.description`),
+  };
 
   return (
     <main className="flex min-h-screen items-center justify-center px-4 py-10 sm:px-6">
@@ -81,14 +63,14 @@ export default async function OnboardingPage({
         </h1>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-400">{copy.description}</p>
         {step === "welcome" && (
-          <ol aria-label="Phoenix principles" className="mt-7 grid gap-3 sm:grid-cols-3">
-            {["Execute", "Review", "Improve"].map((principle, index) => (
+          <ol aria-label={t("principles.label")} className="mt-7 grid gap-3 sm:grid-cols-3">
+            {(["execute", "review", "improve"] as const).map((principle, index) => (
               <li
                 key={principle}
                 className="rounded-xl border border-slate-800 bg-slate-950/40 p-4"
               >
                 <span className="text-xs text-slate-500">0{index + 1}</span>
-                <p className="mt-2 font-semibold text-white">{principle}</p>
+                <p className="mt-2 font-semibold text-white">{t(`principles.${principle}`)}</p>
               </li>
             ))}
           </ol>

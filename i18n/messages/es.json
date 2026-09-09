@@ -12,5 +12,166 @@
       "invalid": "Elige un idioma compatible.",
       "error": "No se pudo guardar la preferencia de idioma. Inténtalo de nuevo."
     }
+  },
+  "shell": {
+    "workspace": "Trading",
+    "section": "Trading",
+    "logout": "Cerrar sesión",
+    "loading": "Cargando el espacio de trading",
+    "currentIdentity": "Identidad Phoenix actual",
+    "traderFallback": "Trader",
+    "identityFallback": "Espacio de trading"
+  },
+  "navigation": {
+    "dashboard": "Panel",
+    "dashboardMobile": "Panel",
+    "newTrade": "Nueva operación",
+    "newTradeMobile": "Operación",
+    "reviews": "Revisiones",
+    "reviewsMobile": "Revisiones",
+    "settings": "Configuración",
+    "settingsMobile": "Ajustes",
+    "primaryLabel": "Navegación principal de trading",
+    "mobileLabel": "Navegación móvil de trading"
+  },
+  "auth": {
+    "accountAccess": "Acceso a la cuenta",
+    "fields": {
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "confirmPassword": "Confirmar contraseña",
+      "newPassword": "Nueva contraseña",
+      "confirmNewPassword": "Confirmar nueva contraseña"
+    },
+    "login": {
+      "title": "Disciplina antes que beneficio.",
+      "description": "Inicia sesión para acceder a tu espacio de trading.",
+      "submit": "Iniciar sesión",
+      "pending": "Iniciando sesión…"
+    },
+    "register": {
+      "title": "Crea tu espacio de trading.",
+      "description": "Crea tu cuenta para comenzar a construir un proceso de trading disciplinado.",
+      "submit": "Crear cuenta",
+      "pending": "Creando cuenta…"
+    },
+    "forgot": {
+      "title": "Recupera tu acceso a Phoenix.",
+      "description": "Introduce tu correo. Si existe una cuenta, enviaremos las instrucciones para restablecer la contraseña.",
+      "submit": "Enviar instrucciones",
+      "pending": "Enviando instrucciones…"
+    },
+    "reset": {
+      "title": "Elige una nueva contraseña.",
+      "description": "Utiliza una nueva contraseña para tu cuenta de Phoenix.",
+      "submit": "Actualizar contraseña",
+      "pending": "Actualizando contraseña…"
+    },
+    "links": {
+      "createAccount": "Crear cuenta",
+      "forgotPassword": "¿Olvidaste la contraseña?",
+      "alreadyHaveAccount": "¿Ya tienes una cuenta? Inicia sesión",
+      "backToSignIn": "Volver al inicio de sesión",
+      "requestNewReset": "Solicitar otro correo"
+    },
+    "messages": {
+      "passwordUpdated": "Contraseña actualizada. Inicia sesión con tu nueva contraseña.",
+      "invalidAuthLink": "Este enlace de autenticación no es válido o ha caducado.",
+      "invalidRecoveryLink": "Este enlace de recuperación no es válido o ha caducado."
+    }
+  },
+  "onboarding": {
+    "welcome": {
+      "eyebrow": "Paso 1 / 3 · Bienvenida",
+      "title": "Crea tu sistema operativo de trading",
+      "description": "Crea el espacio privado que respaldará un proceso de trading disciplinado."
+    },
+    "account": {
+      "eyebrow": "Paso 2 / 3 · Primera cuenta de trading",
+      "title": "Añade tu primera cuenta de trading",
+      "description": "Define dónde pertenecen tus operaciones y los resultados por divisa."
+    },
+    "environment": {
+      "eyebrow": "Paso 3 / 3 · Entorno de trading",
+      "title": "Configura tu entorno de trading",
+      "description": "Añade el contexto de Session y el Setup repetible necesarios para una ejecución disciplinada.",
+      "session": "Session de trading",
+      "setup": "Setup de trading"
+    },
+    "complete": {
+      "eyebrow": "Configuración completada",
+      "title": "Tu entorno de trading está listo",
+      "description": "Continúa al Panel. Puedes completar los elementos pendientes en Configuración."
+    },
+    "principles": {
+      "label": "Principios Phoenix",
+      "execute": "Ejecutar",
+      "review": "Revisar",
+      "improve": "Mejorar"
+    },
+    "fields": {
+      "workspaceName": "Nombre del espacio",
+      "timezone": "Zona horaria",
+      "accountName": "Nombre de la cuenta",
+      "broker": "Broker",
+      "accountType": "Tipo de cuenta",
+      "currency": "Divisa (código de 3 letras)",
+      "initialBalance": "Saldo inicial",
+      "status": "Estado",
+      "sessionDate": "Fecha de la Session",
+      "sessionType": "Tipo de Session",
+      "marketBias": "Sesgo del mercado (opcional)",
+      "emotionalState": "Estado emocional (opcional)",
+      "notes": "Notas (opcional)",
+      "name": "Nombre",
+      "timeframe": "Temporalidad",
+      "marketCondition": "Condición del mercado (opcional)",
+      "entryRules": "Reglas de entrada",
+      "exitRules": "Reglas de salida",
+      "validationRules": "Reglas de validación"
+    },
+    "actions": {
+      "settingUp": "Configurando…",
+      "setupWorkspace": "Configurar mi entorno",
+      "skip": "Omitir por ahora",
+      "saving": "Guardando…",
+      "continue": "Continuar",
+      "finishing": "Finalizando…",
+      "finish": "Finalizar configuración",
+      "goToDashboard": "Ir al Panel"
+    }
+  },
+  "errors": {
+    "validation": {
+      "checkFields": "Revisa los campos señalados.",
+      "checkField": "Revisa el campo señalado.",
+      "emailRequired": "El correo electrónico es obligatorio.",
+      "emailInvalid": "Introduce un correo electrónico válido.",
+      "passwordRequired": "La contraseña es obligatoria.",
+      "passwordConfirmRequired": "Confirma tu contraseña.",
+      "passwordMismatch": "Las contraseñas deben coincidir.",
+      "passwordMinimum": "Utiliza al menos {count} caracteres.",
+      "balanceNonNegative": "El saldo no puede ser negativo.",
+      "balanceInvalid": "Introduce un saldo con un máximo de dos decimales.",
+      "required": "El campo {field} es obligatorio.",
+      "fieldRequired": "Este campo es obligatorio.",
+      "invalidField": "Introduce un valor válido."
+    },
+    "auth": {
+      "notConfigured": "La autenticación no está configurada para este entorno.",
+      "invalidCredentials": "El correo o la contraseña son incorrectos.",
+      "signInUnavailable": "No se puede iniciar sesión ahora. Inténtalo de nuevo.",
+      "registerUnavailable": "No se puede crear una cuenta ahora. Inténtalo de nuevo.",
+      "genericSignup": "Si esta dirección se puede registrar, revisa tu correo para continuar.",
+      "genericRecovery": "Si existe una cuenta para ese correo, se han enviado las instrucciones para restablecer la contraseña.",
+      "invalidRecoveryLink": "Este enlace de recuperación no es válido o ha caducado.",
+      "passwordUpdateUnavailable": "No se puede actualizar la contraseña ahora. Inténtalo de nuevo."
+    },
+    "onboarding": {
+      "conflict": "Este elemento ya existe.",
+      "workspacePersistence": "No se pudo crear tu espacio de trading. Inténtalo de nuevo.",
+      "accountPersistence": "No se pudo crear tu primera cuenta de trading. Inténtalo de nuevo.",
+      "environmentPersistence": "No se pudo configurar tu entorno de trading. Inténtalo de nuevo."
+    }
   }
 }

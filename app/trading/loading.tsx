@@ -1,10 +1,12 @@
 import { PhoenixMark } from "@/components/ui/phoenix-mark";
+import { getTranslations } from "next-intl/server";
 
-export default function TradingLoading() {
+export default async function TradingLoading() {
+  const t = await getTranslations("shell");
   return (
     <main
       aria-busy="true"
-      aria-label="Loading trading workspace"
+      aria-label={t("loading")}
       className="mx-auto min-h-screen max-w-7xl animate-pulse px-4 py-7 sm:px-6 sm:py-9 lg:px-8"
     >
       <PhoenixMark size="compact" className="mb-6" />

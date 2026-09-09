@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { useTranslations } from "next-intl";
 
 import { login, type LoginActionState } from "@/app/actions/auth";
 
@@ -9,12 +10,17 @@ const control =
   "h-12 rounded-xl border border-slate-700 bg-slate-950/70 px-4 text-base text-white outline-none placeholder:text-slate-600 focus:border-phoenix-orange focus:ring-2 focus:ring-orange-500/20 disabled:opacity-60";
 
 export function LoginForm() {
+  const t = useTranslations("auth");
+  const errorT = useTranslations("errors") as unknown as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const [state, action, pending] = useActionState(login, initialState);
 
   return (
     <form action={action} className="mt-8 grid gap-5" noValidate>
       <label className="grid gap-2 text-sm font-medium text-slate-200">
-        Email
+        {t("fields.email")}
         <input
           className={control}
           type="email"
@@ -27,13 +33,13 @@ export function LoginForm() {
         />
         {state.fieldErrors?.email && (
           <span id="email-error" className="text-sm text-rose-300">
-            {state.fieldErrors.email}
+            {errorT(state.fieldErrors.email.key, state.fieldErrors.email.values)}
           </span>
         )}
       </label>
 
       <label className="grid gap-2 text-sm font-medium text-slate-200">
-        Password
+        {t("fields.password")}
         <input
           className={control}
           type="password"
@@ -45,7 +51,7 @@ export function LoginForm() {
         />
         {state.fieldErrors?.password && (
           <span id="password-error" className="text-sm text-rose-300">
-            {state.fieldErrors.password}
+            {errorT(state.fieldErrors.password.key, state.fieldErrors.password.values)}
           </span>
         )}
       </label>
@@ -55,7 +61,7 @@ export function LoginForm() {
           role="alert"
           className="rounded-xl border border-rose-900/60 bg-rose-950/30 px-4 py-3 text-sm text-rose-200"
         >
-          {state.message}
+          {errorT(state.message.key, state.message.values)}
         </p>
       )}
 
@@ -64,7 +70,7 @@ export function LoginForm() {
         disabled={pending}
         className="mt-1 inline-flex h-12 items-center justify-center rounded-xl bg-phoenix-orange px-5 text-sm font-semibold text-slate-950 transition-colors hover:bg-orange-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-phoenix-orange disabled:cursor-wait disabled:opacity-60"
       >
-        {pending ? "Signing in…" : "Sign in"}
+        {pending ? t("login.pending") : t("login.submit")}
       </button>
     </form>
   );

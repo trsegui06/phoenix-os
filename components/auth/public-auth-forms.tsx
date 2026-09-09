@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
+import { useTranslations } from "next-intl";
 
 import {
   register,
@@ -20,9 +21,17 @@ function Status({ state }: { state: PublicAuthState }) {
       role={state.success ? "status" : "alert"}
       className={`rounded-xl border px-4 py-3 text-sm ${state.success ? "border-emerald-900 bg-emerald-950/30 text-emerald-200" : "border-rose-900/60 bg-rose-950/30 text-rose-200"}`}
     >
-      {state.message}
+      <LocalizedError message={state.message} />
     </p>
   ) : null;
+}
+
+function LocalizedError({ message }: { message: NonNullable<PublicAuthState["message"]> }) {
+  const t = useTranslations("errors") as unknown as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
+  return t(message.key, message.values);
 }
 
 function PasswordFields({
@@ -34,6 +43,7 @@ function PasswordFields({
   pending: boolean;
   prefix?: string;
 }) {
+  const t = useTranslations("auth");
   const passwordId = prefix ? "new-password" : "password";
   const confirmPasswordId = prefix ? "confirm-new-password" : "confirm-password";
 
@@ -41,7 +51,7 @@ function PasswordFields({
     <>
       <div>
         <label htmlFor={passwordId} className="text-sm font-medium text-slate-200">
-          {prefix}Password
+          {prefix ? t("fields.newPassword") : t("fields.password")}
         </label>
         <input
           id={passwordId}
@@ -55,13 +65,13 @@ function PasswordFields({
         />
         {state.fieldErrors?.password && (
           <span id="password-error" className="mt-2 block text-sm text-rose-300">
-            {state.fieldErrors.password}
+            <LocalizedError message={state.fieldErrors.password} />
           </span>
         )}
       </div>
       <div>
         <label htmlFor={confirmPasswordId} className="text-sm font-medium text-slate-200">
-          Confirm {prefix.toLowerCase()}password
+          {prefix ? t("fields.confirmNewPassword") : t("fields.confirmPassword")}
         </label>
         <input
           id={confirmPasswordId}
@@ -77,7 +87,7 @@ function PasswordFields({
         />
         {state.fieldErrors?.confirmPassword && (
           <span id="confirm-password-error" className="mt-2 block text-sm text-rose-300">
-            {state.fieldErrors.confirmPassword}
+            <LocalizedError message={state.fieldErrors.confirmPassword} />
           </span>
         )}
       </div>
@@ -86,12 +96,13 @@ function PasswordFields({
 }
 
 export function RegisterForm() {
+  const t = useTranslations("auth");
   const [state, action, pending] = useActionState(register, initial);
   return (
     <form action={action} noValidate className="mt-8 grid gap-5">
       <div>
         <label htmlFor="register-email" className="text-sm font-medium text-slate-200">
-          Email
+          {t("fields.email")}
         </label>
         <input
           id="register-email"
@@ -106,7 +117,7 @@ export function RegisterForm() {
         />
         {state.fieldErrors?.email && (
           <span id="register-email-error" className="mt-2 block text-sm text-rose-300">
-            {state.fieldErrors.email}
+            <LocalizedError message={state.fieldErrors.email} />
           </span>
         )}
       </div>
@@ -116,22 +127,23 @@ export function RegisterForm() {
         disabled={pending}
         className="h-12 rounded-xl bg-phoenix-orange font-semibold text-slate-950 disabled:cursor-wait disabled:opacity-60"
       >
-        {pending ? "Creating account…" : "Create account"}
+        {pending ? t("register.pending") : t("register.submit")}
       </button>
       <Link href="/login" className="text-center text-sm text-slate-400 hover:text-white">
-        Already have an account? Sign in
+        {t("links.alreadyHaveAccount")}
       </Link>
     </form>
   );
 }
 
 export function ForgotPasswordForm() {
+  const t = useTranslations("auth");
   const [state, action, pending] = useActionState(requestPasswordReset, initial);
   return (
     <form action={action} noValidate className="mt-8 grid gap-5">
       <div>
         <label htmlFor="reset-email" className="text-sm font-medium text-slate-200">
-          Email
+          {t("fields.email")}
         </label>
         <input
           id="reset-email"
@@ -146,7 +158,7 @@ export function ForgotPasswordForm() {
         />
         {state.fieldErrors?.email && (
           <span id="reset-email-error" className="mt-2 block text-sm text-rose-300">
-            {state.fieldErrors.email}
+            <LocalizedError message={state.fieldErrors.email} />
           </span>
         )}
       </div>
@@ -155,16 +167,17 @@ export function ForgotPasswordForm() {
         disabled={pending}
         className="h-12 rounded-xl bg-phoenix-orange font-semibold text-slate-950 disabled:cursor-wait disabled:opacity-60"
       >
-        {pending ? "Sending instructions…" : "Send reset instructions"}
+        {pending ? t("forgot.pending") : t("forgot.submit")}
       </button>
       <Link href="/login" className="text-center text-sm text-slate-400 hover:text-white">
-        Back to sign in
+        {t("links.backToSignIn")}
       </Link>
     </form>
   );
 }
 
 export function ResetPasswordForm() {
+  const t = useTranslations("auth");
   const [state, action, pending] = useActionState(updateRecoveredPassword, initial);
   return (
     <form action={action} noValidate className="mt-8 grid gap-5">
@@ -174,7 +187,7 @@ export function ResetPasswordForm() {
         disabled={pending}
         className="h-12 rounded-xl bg-phoenix-orange font-semibold text-slate-950 disabled:cursor-wait disabled:opacity-60"
       >
-        {pending ? "Updating password…" : "Update password"}
+        {pending ? t("reset.pending") : t("reset.submit")}
       </button>
     </form>
   );
