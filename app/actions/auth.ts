@@ -2,13 +2,14 @@
 
 import { redirect } from "next/navigation";
 
-import { mapAuthenticationError, validateLoginCredentials } from "@/lib/auth/login";
+import { validateLoginCredentials } from "@/lib/auth/login";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { hasCurrentTrader } from "@/services/trading/trader-provisioning";
+import { validationMessages, type PresentationMessage } from "@/i18n/presentation";
 
 export type LoginActionState = {
-  message?: string;
-  fieldErrors?: { email?: string; password?: string };
+  message?: PresentationMessage;
+  fieldErrors?: { email?: PresentationMessage; password?: PresentationMessage };
 };
 
 export async function login(
@@ -18,17 +19,27 @@ export async function login(
   const result = validateLoginCredentials(formData.get("email"), formData.get("password"));
 
   if (!result.success) {
-    return { message: "Check the highlighted fields.", fieldErrors: result.fieldErrors };
+    return {
+      message: { key: "validation.checkFields" },
+      fieldErrors: validationMessages(result.fieldErrors),
+    };
   }
 
   const client = await getSupabaseServerClient();
   if (!client) {
-    return { message: "Authentication is not configured for this environment." };
+    return { message: { key: "auth.notConfigured" } };
   }
 
   const { error } = await client.auth.signInWithPassword(result.data);
   if (error) {
-    return { message: mapAuthenticationError(error.code) };
+    return {
+      message: {
+        key:
+          error.code === "invalid_credentials"
+            ? "auth.invalidCredentials"
+            : "auth.signInUnavailable",
+      },
+    };
   }
 
   redirect((await hasCurrentTrader(client)) ? "/trading" : "/onboarding");

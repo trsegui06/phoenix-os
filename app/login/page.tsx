@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 import { LoginForm } from "@/components/auth/login-form";
 import { BrandLockup } from "@/components/ui/phoenix-mark";
@@ -11,6 +12,7 @@ export default async function LoginPage({
 }: {
   searchParams: Promise<{ reset?: string; auth?: string }>;
 }) {
+  const t = await getTranslations("auth");
   const client = await getSupabaseServerClient();
   if (client) {
     const {
@@ -27,17 +29,15 @@ export default async function LoginPage({
       >
         <BrandLockup />
         <h1 id="login-title" className="mt-2 text-3xl font-semibold tracking-tight text-white">
-          Discipline before profit.
+          {t("login.title")}
         </h1>
-        <p className="mt-3 text-sm leading-6 text-slate-400">
-          Sign in to continue to your trading workspace.
-        </p>
+        <p className="mt-3 text-sm leading-6 text-slate-400">{t("login.description")}</p>
         {(await searchParams).reset === "success" && (
           <p
             role="status"
             className="mt-6 rounded-xl border border-emerald-900 bg-emerald-950/30 px-4 py-3 text-sm text-emerald-200"
           >
-            Password updated. Sign in with your new password.
+            {t("messages.passwordUpdated")}
           </p>
         )}
         {(await searchParams).auth === "invalid" && (
@@ -45,16 +45,16 @@ export default async function LoginPage({
             role="alert"
             className="mt-6 rounded-xl border border-rose-900/60 bg-rose-950/30 px-4 py-3 text-sm text-rose-200"
           >
-            This authentication link is invalid or has expired.
+            {t("messages.invalidAuthLink")}
           </p>
         )}
         <LoginForm />
-        <nav aria-label="Account access" className="mt-6 flex justify-between gap-4 text-sm">
+        <nav aria-label={t("accountAccess")} className="mt-6 flex justify-between gap-4 text-sm">
           <Link href="/register" className="text-phoenix-orange hover:text-orange-300">
-            Create account
+            {t("links.createAccount")}
           </Link>
           <Link href="/forgot-password" className="text-slate-400 hover:text-white">
-            Forgot password?
+            {t("links.forgotPassword")}
           </Link>
         </nav>
       </section>

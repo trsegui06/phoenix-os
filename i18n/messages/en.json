@@ -12,5 +12,166 @@
       "invalid": "Choose a supported language.",
       "error": "The language preference could not be saved. Try again."
     }
+  },
+  "shell": {
+    "workspace": "Trading",
+    "section": "Trading",
+    "logout": "Logout",
+    "loading": "Loading trading workspace",
+    "currentIdentity": "Current Phoenix identity",
+    "traderFallback": "Trader",
+    "identityFallback": "Trading workspace"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "dashboardMobile": "Dashboard",
+    "newTrade": "New Trade",
+    "newTradeMobile": "Trade",
+    "reviews": "Reviews",
+    "reviewsMobile": "Reviews",
+    "settings": "Trading Setup",
+    "settingsMobile": "Setup",
+    "primaryLabel": "Primary trading navigation",
+    "mobileLabel": "Mobile trading navigation"
+  },
+  "auth": {
+    "accountAccess": "Account access",
+    "fields": {
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Confirm password",
+      "newPassword": "New Password",
+      "confirmNewPassword": "Confirm new password"
+    },
+    "login": {
+      "title": "Discipline before profit.",
+      "description": "Sign in to continue to your trading workspace.",
+      "submit": "Sign in",
+      "pending": "Signing in…"
+    },
+    "register": {
+      "title": "Start your trading workspace.",
+      "description": "Create your account to begin building a disciplined trading process.",
+      "submit": "Create account",
+      "pending": "Creating account…"
+    },
+    "forgot": {
+      "title": "Recover your Phoenix access.",
+      "description": "Enter your email and we will send password reset instructions if an account exists.",
+      "submit": "Send reset instructions",
+      "pending": "Sending instructions…"
+    },
+    "reset": {
+      "title": "Choose a new password.",
+      "description": "Use a new password for your Phoenix account.",
+      "submit": "Update password",
+      "pending": "Updating password…"
+    },
+    "links": {
+      "createAccount": "Create account",
+      "forgotPassword": "Forgot password?",
+      "alreadyHaveAccount": "Already have an account? Sign in",
+      "backToSignIn": "Back to sign in",
+      "requestNewReset": "Request a new reset email"
+    },
+    "messages": {
+      "passwordUpdated": "Password updated. Sign in with your new password.",
+      "invalidAuthLink": "This authentication link is invalid or has expired.",
+      "invalidRecoveryLink": "This recovery link is invalid or has expired."
+    }
+  },
+  "onboarding": {
+    "welcome": {
+      "eyebrow": "Step 1 / 3 · Welcome",
+      "title": "Build your trading operating system",
+      "description": "Create the private workspace that will support a disciplined trading process."
+    },
+    "account": {
+      "eyebrow": "Step 2 / 3 · First Trading Account",
+      "title": "Add your first Trading Account",
+      "description": "Define where your Trades and currency-scoped results belong."
+    },
+    "environment": {
+      "eyebrow": "Step 3 / 3 · Trading Environment",
+      "title": "Configure your trading environment",
+      "description": "Add the Session context and repeatable Setup required for disciplined execution.",
+      "session": "Trading Session",
+      "setup": "Trading Setup"
+    },
+    "complete": {
+      "eyebrow": "Setup complete",
+      "title": "Your trading environment is ready",
+      "description": "Continue to your Dashboard. Missing prerequisites can still be completed in Trading Setup."
+    },
+    "principles": {
+      "label": "Phoenix principles",
+      "execute": "Execute",
+      "review": "Review",
+      "improve": "Improve"
+    },
+    "fields": {
+      "workspaceName": "Workspace name",
+      "timezone": "Timezone",
+      "accountName": "Account Name",
+      "broker": "Broker",
+      "accountType": "Account Type",
+      "currency": "Currency (3-letter code)",
+      "initialBalance": "Initial Balance",
+      "status": "Status",
+      "sessionDate": "Session Date",
+      "sessionType": "Session Type",
+      "marketBias": "Market Bias (optional)",
+      "emotionalState": "Emotional State (optional)",
+      "notes": "Notes (optional)",
+      "name": "Name",
+      "timeframe": "Timeframe",
+      "marketCondition": "Market Condition (optional)",
+      "entryRules": "Entry Rules",
+      "exitRules": "Exit Rules",
+      "validationRules": "Validation Rules"
+    },
+    "actions": {
+      "settingUp": "Setting up…",
+      "setupWorkspace": "Set Up My Trading Environment",
+      "skip": "Skip for now",
+      "saving": "Saving…",
+      "continue": "Continue",
+      "finishing": "Finishing…",
+      "finish": "Finish Setup",
+      "goToDashboard": "Go to Dashboard"
+    }
+  },
+  "errors": {
+    "validation": {
+      "checkFields": "Check the highlighted fields.",
+      "checkField": "Check the highlighted field.",
+      "emailRequired": "Email is required.",
+      "emailInvalid": "Enter a valid email address.",
+      "passwordRequired": "Password is required.",
+      "passwordConfirmRequired": "Confirm your password.",
+      "passwordMismatch": "Passwords must match.",
+      "passwordMinimum": "Use at least {count} characters.",
+      "balanceNonNegative": "Balance must not be negative.",
+      "balanceInvalid": "Enter a balance with at most two decimals.",
+      "required": "{field} is required.",
+      "fieldRequired": "This field is required.",
+      "invalidField": "Enter a valid value."
+    },
+    "auth": {
+      "notConfigured": "Authentication is not configured for this environment.",
+      "invalidCredentials": "Email or password is incorrect.",
+      "signInUnavailable": "Unable to sign in right now. Please try again.",
+      "registerUnavailable": "Unable to create an account right now. Please try again.",
+      "genericSignup": "If this address can be registered, check your email for the next step.",
+      "genericRecovery": "If an account exists for that email, password reset instructions have been sent.",
+      "invalidRecoveryLink": "This recovery link is invalid or has expired.",
+      "passwordUpdateUnavailable": "Unable to update the password right now. Please try again."
+    },
+    "onboarding": {
+      "conflict": "This item already exists.",
+      "workspacePersistence": "Your trading workspace could not be created. Try again.",
+      "accountPersistence": "Your first Trading Account could not be created. Try again.",
+      "environmentPersistence": "Your trading environment could not be configured. Try again."
+    }
   }
 }

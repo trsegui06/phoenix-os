@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getLocale } from "next-intl/server";
+import { validationMessage, type PresentationMessage } from "@/i18n/presentation";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import {
   adaptCreateAccountForm,
@@ -17,8 +18,8 @@ import { createTradingSession, listTradingSessions } from "@/services/trading/tr
 import { createTradingSetup, listTradingSetups } from "@/services/trading/trading-setups";
 
 export type OnboardingState = {
-  message?: string;
-  fieldErrors?: Record<string, string>;
+  message?: PresentationMessage;
+  fieldErrors?: Record<string, PresentationMessage>;
 };
 
 async function onboardingClient() {
@@ -27,14 +28,14 @@ async function onboardingClient() {
   return client;
 }
 
-function validationState(error: unknown, fallback: string): OnboardingState {
+function validationState(error: unknown, fallbackKey: string): OnboardingState {
   if (error instanceof TradingSettingsFormError) {
     const field = /balance/i.test(error.message)
       ? "initialBalance"
       : error.message.match(/^(\w+)/)?.[1];
     return {
-      message: "Check the highlighted fields.",
-      fieldErrors: field ? { [field]: error.message } : undefined,
+      message: { key: "validation.checkFields" },
+      fieldErrors: field ? { [field]: validationMessage(error.message) } : undefined,
     };
   }
   if (error instanceof TradingApplicationError) {
@@ -43,13 +44,13 @@ function validationState(error: unknown, fallback: string): OnboardingState {
     if (error.code === "VALIDATION_ERROR") {
       const field = error.message.match(/^(\w+)/)?.[1];
       return {
-        message: "Check the highlighted fields.",
-        fieldErrors: field ? { [field]: error.message } : undefined,
+        message: { key: "validation.checkFields" },
+        fieldErrors: field ? { [field]: validationMessage(error.message) } : undefined,
       };
     }
-    if (error.code === "CONFLICT") return { message: error.message };
+    if (error.code === "CONFLICT") return { message: { key: "onboarding.conflict" } };
   }
-  return { message: fallback };
+  return { message: { key: fallbackKey } };
 }
 
 export async function provisionTraderAction(
@@ -70,12 +71,12 @@ export async function provisionTraderAction(
       if (error.code === "VALIDATION_ERROR") {
         const field = error.message.toLowerCase().includes("timezone") ? "timezone" : "name";
         return {
-          message: "Check the highlighted fields.",
-          fieldErrors: { [field]: error.message },
+          message: { key: "validation.checkFields" },
+          fieldErrors: { [field]: validationMessage(error.message) },
         };
       }
     }
-    return { message: "Your trading workspace could not be created. Try again." };
+    return { message: { key: "onboarding.workspacePersistence" } };
   }
   revalidatePath("/trading");
   revalidatePath("/trading/settings");
@@ -92,7 +93,7 @@ export async function createFirstAccountAction(
     if (!(await listTradingAccounts(client)).length)
       await createTradingAccount(client, adaptCreateAccountForm(form));
   } catch (error) {
-    return validationState(error, "Your first Trading Account could not be created. Try again.");
+    return validationState(error, "onboarding.accountPersistence");
   }
   revalidatePath("/onboarding");
   revalidatePath("/trading/settings");
@@ -113,7 +114,7 @@ export async function configureTradingEnvironmentAction(
     if (!sessions.length) await createTradingSession(client, adaptCreateSessionForm(form));
     if (!setups.length) await createTradingSetup(client, adaptCreateSetupForm(form));
   } catch (error) {
-    return validationState(error, "Your trading environment could not be configured. Try again.");
+    return validationState(error, "onboarding.environmentPersistence");
   }
   revalidatePath("/onboarding");
   revalidatePath("/trading/settings");

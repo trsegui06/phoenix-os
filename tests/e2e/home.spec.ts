@@ -4,6 +4,19 @@ import { e2eMissingProfileUser, e2eUser } from "./auth-fixture";
 
 test.describe.configure({ mode: "serial" });
 
+const requiredViewports = [
+  { width: 1440, height: 900 },
+  { width: 1024, height: 768 },
+  { width: 768, height: 1024 },
+  { width: 390, height: 844 },
+] as const;
+
+async function expectNoHorizontalOverflow(page: import("@playwright/test").Page, width: number) {
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+    width,
+  );
+}
+
 async function signIn(
   page: import("@playwright/test").Page,
   credentials: { email: string; password: string } = e2eUser,
@@ -31,7 +44,38 @@ test("resolves a supported browser language before authentication", async ({ bro
   const page = await context.newPage();
   await page.goto("/login");
   await expect(page.locator("html")).toHaveAttribute("lang", "fr");
+  await expect(page.getByRole("heading", { name: "La discipline avant le profit." })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Se connecter" })).toBeVisible();
+  await page.goto("/register");
+  await expect(page.getByRole("heading", { name: "Créez votre espace de trading." })).toBeVisible();
+  await page.getByRole("button", { name: "Créer un compte" }).click();
+  await expect(page.locator('p[role="alert"]')).toHaveText("Vérifiez les champs signalés.");
+  await page.goto("/forgot-password");
+  await expect(page.getByRole("heading", { name: "Récupérez votre accès Phoenix." })).toBeVisible();
+  await page.goto("/reset-password");
+  await expect(
+    page.getByRole("heading", { name: "Choisissez un nouveau mot de passe." }),
+  ).toBeVisible();
+  for (const viewport of requiredViewports) {
+    await page.setViewportSize(viewport);
+    await page.goto("/login");
+    await expectNoHorizontalOverflow(page, viewport.width);
+  }
   await context.close();
+
+  const spanishContext = await browser.newContext({ locale: "es-ES" });
+  const spanishPage = await spanishContext.newPage();
+  await spanishPage.goto("/login");
+  await expect(spanishPage.locator("html")).toHaveAttribute("lang", "es");
+  await expect(
+    spanishPage.getByRole("heading", { name: "Disciplina antes que beneficio." }),
+  ).toBeVisible();
+  for (const viewport of requiredViewports) {
+    await spanishPage.setViewportSize(viewport);
+    await spanishPage.goto("/register");
+    await expectNoHorizontalOverflow(spanishPage, viewport.width);
+  }
+  await spanishContext.close();
 });
 
 test("persists the authenticated Trader language across sessions", async ({ page, browser }) => {
@@ -45,12 +89,21 @@ test("persists the authenticated Trader language across sessions", async ({ page
   await page.getByLabel("Application language").selectOption("fr");
   await expect(page.locator("html")).toHaveAttribute("lang", "fr");
   await expect(page.getByRole("heading", { name: "Langue" })).toBeVisible();
+  await expect(
+    page.getByRole("navigation", { name: "Navigation principale du trading" }),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "Tableau de bord" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Déconnexion" })).toBeVisible();
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("lang", "fr");
 
   await page.getByLabel("Langue de l’application").selectOption("es");
   await expect(page.locator("html")).toHaveAttribute("lang", "es");
   await expect(page.getByRole("heading", { name: "Idioma" })).toBeVisible();
+  await expect(
+    page.getByRole("navigation", { name: "Navegación principal de trading" }),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "Nueva operación" })).toBeVisible();
 
   const secondContext = await browser.newContext({ locale: "en-US" });
   const secondPage = await secondContext.newPage();
@@ -547,6 +600,17 @@ test("routes an authenticated user without a Trader to onboarding", async ({ pag
   await expect(
     page.getByRole("heading", { name: "Build your trading operating system" }),
   ).toBeVisible();
+  await page
+    .context()
+    .addCookies([{ name: "phoenix-locale", value: "fr", url: "http://127.0.0.1:3000" }]);
+  await page.reload();
+  await expect(
+    page.getByRole("heading", { name: "Créez votre système d’exploitation du trading" }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Nom de l’espace")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Configurer mon environnement" })).toBeVisible();
+  await page.getByRole("button", { name: "Configurer mon environnement" }).click();
+  await expect(page.locator('p[role="alert"]')).toHaveText("Vérifiez les champs signalés.");
   await page.goto("/");
   await expect(page).toHaveURL(/\/onboarding$/);
   await page.goto("/trading/settings");
@@ -585,36 +649,22 @@ test("keeps onboarding skip behavior deterministic without creating prerequisite
 });
 
 test("keeps Login and authenticated Trading usable at required viewports", async ({ page }) => {
-  for (const viewport of [
-    { width: 1440, height: 900 },
-    { width: 1024, height: 768 },
-    { width: 768, height: 1024 },
-    { width: 390, height: 844 },
-  ]) {
+  for (const viewport of requiredViewports) {
     await page.setViewportSize(viewport);
     await page.goto("/login");
     await expect(page.getByRole("heading", { name: "Discipline before profit." })).toBeVisible();
     await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
-      viewport.width,
-    );
+    await expectNoHorizontalOverflow(page, viewport.width);
   }
 
   await signIn(page);
   await expect(page).toHaveURL(/\/trading$/);
-  for (const viewport of [
-    { width: 1440, height: 900 },
-    { width: 1024, height: 768 },
-    { width: 768, height: 1024 },
-    { width: 390, height: 844 },
-  ]) {
+  for (const viewport of requiredViewports) {
     await page.setViewportSize(viewport);
     await page.goto("/trading");
     await expect(page.getByRole("heading", { name: "Trading Dashboard" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Logout" })).toBeVisible();
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
-      viewport.width,
-    );
+    await expectNoHorizontalOverflow(page, viewport.width);
   }
 });
 

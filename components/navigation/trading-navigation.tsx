@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 const items = [
-  { href: "/trading", desktop: "Dashboard", mobile: "Dashboard", mark: "D" },
-  { href: "/trading/new", desktop: "New Trade", mobile: "Trade", mark: "+" },
-  { href: "/trading/reviews", desktop: "Reviews", mobile: "Reviews", mark: "R" },
-  { href: "/trading/settings", desktop: "Trading Setup", mobile: "Setup", mark: "S" },
+  { href: "/trading", key: "dashboard", mobileKey: "dashboardMobile", mark: "D" },
+  { href: "/trading/new", key: "newTrade", mobileKey: "newTradeMobile", mark: "+" },
+  { href: "/trading/reviews", key: "reviews", mobileKey: "reviewsMobile", mark: "R" },
+  { href: "/trading/settings", key: "settings", mobileKey: "settingsMobile", mark: "S" },
 ] as const;
 
 function isActive(pathname: string, href: (typeof items)[number]["href"]) {
@@ -18,9 +19,10 @@ function isActive(pathname: string, href: (typeof items)[number]["href"]) {
 
 export function TradingNavigation({ mobile = false }: { mobile?: boolean }) {
   const pathname = usePathname();
+  const t = useTranslations("navigation");
 
   return (
-    <nav aria-label={mobile ? "Mobile trading navigation" : "Primary trading navigation"}>
+    <nav aria-label={t(mobile ? "mobileLabel" : "primaryLabel")}>
       <ul className={mobile ? "grid grid-cols-4 gap-1" : "space-y-1"}>
         {items.map((item) => {
           const active = isActive(pathname, item.href);
@@ -54,7 +56,7 @@ export function TradingNavigation({ mobile = false }: { mobile?: boolean }) {
                 >
                   {item.mark}
                 </span>
-                <span>{mobile ? item.mobile : item.desktop}</span>
+                <span>{t(mobile ? item.mobileKey : item.key)}</span>
               </Link>
             </li>
           );

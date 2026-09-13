@@ -6,16 +6,21 @@ import { redirect } from "next/navigation";
 
 import { trustedSiteUrl, validateEmail, validateNewPassword } from "@/lib/auth/public-auth";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  validationMessage,
+  validationMessages,
+  type PresentationMessage,
+} from "@/i18n/presentation";
 
 export type PublicAuthState = {
-  message?: string;
+  message?: PresentationMessage;
   success?: boolean;
-  fieldErrors?: { email?: string; password?: string; confirmPassword?: string };
+  fieldErrors?: {
+    email?: PresentationMessage;
+    password?: PresentationMessage;
+    confirmPassword?: PresentationMessage;
+  };
 };
-
-const genericSignup = "If this address can be registered, check your email for the next step.";
-const genericRecovery =
-  "If an account exists for that email, password reset instructions have been sent.";
 
 export async function register(_state: PublicAuthState, form: FormData): Promise<PublicAuthState> {
   const emailResult = validateEmail(form.get("email"));
@@ -25,17 +30,20 @@ export async function register(_state: PublicAuthState, form: FormData): Promise
     ...(!passwordResult.success ? passwordResult.errors : {}),
   };
   if (emailResult.email || !passwordResult.success)
-    return { message: "Check the highlighted fields.", fieldErrors };
+    return {
+      message: { key: "validation.checkFields" },
+      fieldErrors: validationMessages(fieldErrors),
+    };
   const client = await getSupabaseServerClient();
-  if (!client) return { message: "Authentication is not configured for this environment." };
+  if (!client) return { message: { key: "auth.notConfigured" } };
   const { data, error } = await client.auth.signUp({
     email: emailResult.value!,
     password: passwordResult.password,
     options: { emailRedirectTo: `${trustedSiteUrl()}/auth/callback?flow=signup` },
   });
-  if (error) return { message: "Unable to create an account right now. Please try again." };
+  if (error) return { message: { key: "auth.registerUnavailable" } };
   if (data.session) redirect("/onboarding");
-  return { success: true, message: genericSignup };
+  return { success: true, message: { key: "auth.genericSignup" } };
 }
 
 export async function requestPasswordReset(
@@ -44,9 +52,12 @@ export async function requestPasswordReset(
 ): Promise<PublicAuthState> {
   const result = validateEmail(form.get("email"));
   if (result.email)
-    return { message: "Check the highlighted field.", fieldErrors: { email: result.email } };
+    return {
+      message: { key: "validation.checkField" },
+      fieldErrors: { email: validationMessage(result.email) },
+    };
   const client = await getSupabaseServerClient();
-  if (!client) return { message: "Authentication is not configured for this environment." };
+  if (!client) return { message: { key: "auth.notConfigured" } };
   const state = randomBytes(32).toString("base64url");
   const store = await cookies();
   store.set("phoenix-recovery-state", state, {
@@ -59,7 +70,7 @@ export async function requestPasswordReset(
   await client.auth.resetPasswordForEmail(result.value!, {
     redirectTo: `${trustedSiteUrl()}/auth/callback?flow=recovery&state=${encodeURIComponent(state)}`,
   });
-  return { success: true, message: genericRecovery };
+  return { success: true, message: { key: "auth.genericRecovery" } };
 }
 
 export async function updateRecoveredPassword(
@@ -68,15 +79,18 @@ export async function updateRecoveredPassword(
 ): Promise<PublicAuthState> {
   const result = validateNewPassword(form.get("password"), form.get("confirmPassword"));
   if (!result.success)
-    return { message: "Check the highlighted fields.", fieldErrors: result.errors };
+    return {
+      message: { key: "validation.checkFields" },
+      fieldErrors: validationMessages(result.errors),
+    };
   const store = await cookies();
   if (store.get("phoenix-recovery-authorized")?.value !== "1")
-    return { message: "This recovery link is invalid or has expired." };
+    return { message: { key: "auth.invalidRecoveryLink" } };
   const client = await getSupabaseServerClient();
   if (!client || !(await client.auth.getUser()).data.user)
-    return { message: "This recovery link is invalid or has expired." };
+    return { message: { key: "auth.invalidRecoveryLink" } };
   const { error } = await client.auth.updateUser({ password: result.password });
-  if (error) return { message: "Unable to update the password right now. Please try again." };
+  if (error) return { message: { key: "auth.passwordUpdateUnavailable" } };
   await client.auth.signOut();
   store.delete("phoenix-recovery-authorized");
   store.delete("phoenix-recovery-state");

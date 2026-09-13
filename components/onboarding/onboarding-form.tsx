@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
+import { useTranslations } from "next-intl";
 import {
   configureTradingEnvironmentAction,
   createFirstAccountAction,
@@ -20,20 +21,28 @@ const secondary =
 
 function ErrorMessage({ state, name }: { state: OnboardingState; name: string }) {
   const error = state.fieldErrors?.[name];
+  const t = useTranslations("errors") as unknown as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   return error ? (
     <span id={`${name}-error`} className="mt-2 block text-sm text-rose-300">
-      {error}
+      {t(error.key, error.values)}
     </span>
   ) : null;
 }
 
 function Status({ state }: { state: OnboardingState }) {
+  const t = useTranslations("errors") as unknown as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   return state.message ? (
     <p
       role="alert"
       className="rounded-xl border border-rose-900/60 bg-rose-950/30 px-4 py-3 text-sm text-rose-200"
     >
-      {state.message}
+      {t(state.message.key, state.message.values)}
     </p>
   ) : null;
 }
@@ -68,19 +77,20 @@ function Field({
 }
 
 function WelcomeForm() {
+  const t = useTranslations("onboarding");
   const [state, action, pending] = useActionState(provisionTraderAction, initial);
   return (
     <form action={action} noValidate className="mt-8 grid gap-5">
       <Field
         name="name"
-        label="Workspace name"
+        label={t("fields.workspaceName")}
         autoComplete="name"
         state={state}
         pending={pending}
       />
       <Field
         name="timezone"
-        label="Timezone"
+        label={t("fields.timezone")}
         defaultValue="Europe/Paris"
         placeholder="Europe/Paris"
         state={state}
@@ -88,29 +98,42 @@ function WelcomeForm() {
       />
       <Status state={state} />
       <button disabled={pending} className={primary}>
-        {pending ? "Setting up…" : "Set Up My Trading Environment"}
+        {pending ? t("actions.settingUp") : t("actions.setupWorkspace")}
       </button>
     </form>
   );
 }
 
 function AccountForm() {
+  const t = useTranslations("onboarding");
   const [state, action, pending] = useActionState(createFirstAccountAction, initial);
   return (
     <form action={action} noValidate className="mt-8 grid gap-5 sm:grid-cols-2">
-      <Field name="accountName" label="Account Name" required state={state} pending={pending} />
-      <Field name="broker" label="Broker" required state={state} pending={pending} />
-      <Field name="accountType" label="Account Type" required state={state} pending={pending} />
+      <Field
+        name="accountName"
+        label={t("fields.accountName")}
+        required
+        state={state}
+        pending={pending}
+      />
+      <Field name="broker" label={t("fields.broker")} required state={state} pending={pending} />
+      <Field
+        name="accountType"
+        label={t("fields.accountType")}
+        required
+        state={state}
+        pending={pending}
+      />
       <Field
         name="currency"
-        label="Currency (3-letter code)"
+        label={t("fields.currency")}
         required
         state={state}
         pending={pending}
       />
       <Field
         name="initialBalance"
-        label="Initial Balance"
+        label={t("fields.initialBalance")}
         inputMode="decimal"
         required
         state={state}
@@ -118,7 +141,7 @@ function AccountForm() {
       />
       <Field
         name="status"
-        label="Status"
+        label={t("fields.status")}
         defaultValue="active"
         required
         state={state}
@@ -129,10 +152,10 @@ function AccountForm() {
       </div>
       <div className="grid gap-3 sm:col-span-2 sm:grid-cols-2">
         <Link href="/onboarding?step=environment" className={secondary}>
-          Skip for now
+          {t("actions.skip")}
         </Link>
         <button disabled={pending} className={primary}>
-          {pending ? "Saving…" : "Continue"}
+          {pending ? t("actions.saving") : t("actions.continue")}
         </button>
       </div>
     </form>
@@ -146,49 +169,66 @@ function EnvironmentForm({
   needsSession: boolean;
   needsSetup: boolean;
 }) {
+  const t = useTranslations("onboarding");
   const [state, action, pending] = useActionState(configureTradingEnvironmentAction, initial);
   return (
     <form action={action} noValidate className="mt-8 grid gap-7">
       {needsSession && (
         <fieldset className="grid gap-5 rounded-2xl border border-slate-800 p-5 sm:grid-cols-2">
-          <legend className="px-2 text-lg font-semibold text-white">Trading Session</legend>
+          <legend className="px-2 text-lg font-semibold text-white">
+            {t("environment.session")}
+          </legend>
           <Field
             name="sessionDate"
-            label="Session Date"
+            label={t("fields.sessionDate")}
             type="date"
             required
             state={state}
             pending={pending}
           />
-          <Field name="sessionType" label="Session Type" required state={state} pending={pending} />
-          <Field name="marketBias" label="Market Bias (optional)" state={state} pending={pending} />
+          <Field
+            name="sessionType"
+            label={t("fields.sessionType")}
+            required
+            state={state}
+            pending={pending}
+          />
+          <Field name="marketBias" label={t("fields.marketBias")} state={state} pending={pending} />
           <Field
             name="emotionalState"
-            label="Emotional State (optional)"
+            label={t("fields.emotionalState")}
             state={state}
             pending={pending}
           />
           <label className="text-sm font-medium text-slate-200 sm:col-span-2">
-            Notes (optional)
+            {t("fields.notes")}
             <textarea name="notes" disabled={pending} className={control} />
           </label>
         </fieldset>
       )}
       {needsSetup && (
         <fieldset className="grid gap-5 rounded-2xl border border-slate-800 p-5 sm:grid-cols-2">
-          <legend className="px-2 text-lg font-semibold text-white">Trading Setup</legend>
-          <Field name="name" label="Name" required state={state} pending={pending} />
-          <Field name="timeframe" label="Timeframe" required state={state} pending={pending} />
+          <legend className="px-2 text-lg font-semibold text-white">
+            {t("environment.setup")}
+          </legend>
+          <Field name="name" label={t("fields.name")} required state={state} pending={pending} />
+          <Field
+            name="timeframe"
+            label={t("fields.timeframe")}
+            required
+            state={state}
+            pending={pending}
+          />
           <Field
             name="marketCondition"
-            label="Market Condition (optional)"
+            label={t("fields.marketCondition")}
             state={state}
             pending={pending}
           />
           {[
-            ["entryRules", "Entry Rules"],
-            ["exitRules", "Exit Rules"],
-            ["validationRules", "Validation Rules"],
+            ["entryRules", t("fields.entryRules")],
+            ["exitRules", t("fields.exitRules")],
+            ["validationRules", t("fields.validationRules")],
           ].map(([name, label]) => (
             <label key={name} className="text-sm font-medium text-slate-200 sm:col-span-2">
               {label}
@@ -208,10 +248,10 @@ function EnvironmentForm({
       <Status state={state} />
       <div className="grid gap-3 sm:grid-cols-2">
         <Link href="/onboarding?step=complete" className={secondary}>
-          Skip for now
+          {t("actions.skip")}
         </Link>
         <button disabled={pending} className={primary}>
-          {pending ? "Finishing…" : "Finish Setup"}
+          {pending ? t("actions.finishing") : t("actions.finish")}
         </button>
       </div>
     </form>
@@ -227,13 +267,14 @@ export function OnboardingForm({
   needsSession: boolean;
   needsSetup: boolean;
 }) {
+  const t = useTranslations("onboarding");
   if (step === "welcome") return <WelcomeForm />;
   if (step === "account") return <AccountForm />;
   if (step === "environment")
     return <EnvironmentForm needsSession={needsSession} needsSetup={needsSetup} />;
   return (
     <Link href="/trading" className={`mt-8 w-full ${primary}`}>
-      Go to Dashboard
+      {t("actions.goToDashboard")}
     </Link>
   );
 }

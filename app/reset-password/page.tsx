@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 import { AuthShell } from "@/components/auth/auth-shell";
 import { ResetPasswordForm } from "@/components/auth/public-auth-forms";
@@ -10,12 +11,10 @@ export default async function ResetPasswordPage({
 }: {
   searchParams: Promise<{ recovery?: string }>;
 }) {
+  const t = await getTranslations("auth");
   const authorized = (await searchParams).recovery === "authorized";
   return (
-    <AuthShell
-      title="Choose a new password."
-      description="Use a new password for your Phoenix account."
-    >
+    <AuthShell title={t("reset.title")} description={t("reset.description")}>
       {authorized ? (
         <ResetPasswordForm />
       ) : (
@@ -24,10 +23,10 @@ export default async function ResetPasswordPage({
             role="alert"
             className="rounded-xl border border-rose-900/60 bg-rose-950/30 px-4 py-3 text-sm text-rose-200"
           >
-            This recovery link is invalid or has expired.
+            {t("messages.invalidRecoveryLink")}
           </p>
           <Link href="/forgot-password" className="text-center text-sm text-phoenix-orange">
-            Request a new reset email
+            {t("links.requestNewReset")}
           </Link>
         </div>
       )}
