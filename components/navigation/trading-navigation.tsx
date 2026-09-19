@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { ClipboardCheck, LayoutDashboard, Plus, Settings } from "lucide-react";
 
 const items = [
-  { href: "/trading", key: "dashboard", mobileKey: "dashboardMobile", mark: "D" },
-  { href: "/trading/new", key: "newTrade", mobileKey: "newTradeMobile", mark: "+" },
-  { href: "/trading/reviews", key: "reviews", mobileKey: "reviewsMobile", mark: "R" },
-  { href: "/trading/settings", key: "settings", mobileKey: "settingsMobile", mark: "S" },
+  { href: "/trading", key: "dashboard", mobileKey: "dashboardMobile", icon: LayoutDashboard },
+  { href: "/trading/new", key: "newTrade", mobileKey: "newTradeMobile", icon: Plus },
+  { href: "/trading/reviews", key: "reviews", mobileKey: "reviewsMobile", icon: ClipboardCheck },
+  { href: "/trading/settings", key: "settings", mobileKey: "settingsMobile", icon: Settings },
 ] as const;
 
 function isActive(pathname: string, href: (typeof items)[number]["href"]) {
@@ -27,6 +28,7 @@ export function TradingNavigation({ mobile = false }: { mobile?: boolean }) {
         {items.map((item) => {
           const active = isActive(pathname, item.href);
           const emphasized = item.href === "/trading/new";
+          const Icon = item.icon;
           return (
             <li key={item.href}>
               <Link
@@ -54,7 +56,7 @@ export function TradingNavigation({ mobile = false }: { mobile?: boolean }) {
                   aria-hidden="true"
                   className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-xs font-bold ${active ? "bg-phoenix-orange text-slate-950" : "bg-slate-800 text-slate-300"}`}
                 >
-                  {item.mark}
+                  <Icon size={20} strokeWidth={2} aria-hidden="true" />
                 </span>
                 <span>{t(mobile ? item.mobileKey : item.key)}</span>
               </Link>
