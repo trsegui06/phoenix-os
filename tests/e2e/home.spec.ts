@@ -354,6 +354,12 @@ test("navigates the Trading shell and preserves mobile access", async ({ page })
   const navigation = page.getByRole("navigation", { name: "Mobile trading navigation" });
   await expect(navigation).toBeVisible();
   await expect(navigation.getByRole("link")).toHaveCount(4);
+  const markers = navigation.getByRole("link").locator('span[aria-hidden="true"]');
+  await expect(markers).toHaveCount(4);
+  for (const marker of await markers.all()) {
+    await expect(marker).toHaveText("");
+    await expect(marker.locator('svg[aria-hidden="true"]')).toBeVisible();
+  }
   await expect(page.getByLabel("Current Phoenix identity")).toBeHidden();
   const dashboard = navigation.getByRole("link", { name: "Dashboard" });
   const trade = navigation.getByRole("link", { name: "Trade" });
