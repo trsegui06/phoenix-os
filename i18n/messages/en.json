@@ -173,5 +173,108 @@
       "accountPersistence": "Your first Trading Account could not be created. Try again.",
       "environmentPersistence": "Your trading environment could not be configured. Try again."
     }
+  },
+  "dashboard": {
+    "page": {
+      "eyebrow": "Trading cockpit",
+      "title": "Trading Dashboard",
+      "motto": "Process before performance.",
+      "description": "Track execution, risk, consistency and learning from your real trading data."
+    },
+    "notices": {
+      "invalidFilters": "Those filters were invalid, so the dashboard was reset.",
+      "unavailable": "Trading data is unavailable right now. Please try again shortly.",
+      "tradeRecorded": "Trade recorded."
+    },
+    "filters": {
+      "accessibleLabel": "Trading statistics filters",
+      "from": "From",
+      "to": "To",
+      "account": "Trading account",
+      "allAccounts": "All accounts",
+      "apply": "Apply",
+      "reset": "Reset"
+    },
+    "empty": {
+      "title": "No trades recorded yet.",
+      "description": "Your statistics will appear after trading data is added."
+    },
+    "performance": {
+      "eyebrow": "Current signal",
+      "title": "Performance, risk and discipline",
+      "description": "A focused view of realized outcomes and process quality."
+    },
+    "pnl": {
+      "title": "Realized P&L by Currency",
+      "currencyNotice": "Currencies are never combined.",
+      "empty": "No realized P&L yet.",
+      "detailHint": "Detailed realized, average, gross profit and gross loss values remain available below.",
+      "detailTitle": "P&L detail",
+      "detailDescription": "Exact currency-scoped realized results.",
+      "currency": "Currency",
+      "realized": "Realized",
+      "averageTrade": "Average Trade",
+      "grossProfit": "Gross Profit",
+      "grossLoss": "Gross Loss"
+    },
+    "kpis": {
+      "winRate": "Win Rate",
+      "averageRisk": "Average Risk",
+      "riskNote": "Trades with recorded risk",
+      "errorRate": "Trade Error Rate",
+      "affectedTrades": "{count, plural, one {# affected trade} other {# affected trades}}",
+      "outcomes": "{wins}W · {losses}L · {breakeven}BE",
+      "outcomesAccessible": "Wins: {wins}; losses: {losses}; breakeven: {breakeven}."
+    },
+    "activity": {
+      "eyebrow": "Activity & learning",
+      "title": "Practice context",
+      "description": "Volume and learning signals, intentionally separate from performance.",
+      "totalTrades": "Total Trades",
+      "tradeCounts": "{closed, plural, one {# closed} other {# closed}} · {unresolved, plural, one {# unresolved} other {# unresolved}}",
+      "reviews": "Reviews",
+      "reviewScope": "Date-overlap scope",
+      "objectives": "Objectives",
+      "objectiveScope": "Trader-wide scope"
+    },
+    "breakdowns": {
+      "eyebrow": "Performance breakdowns",
+      "title": "Execution patterns",
+      "description": "Exact backend ordering with no ranking or label normalization.",
+      "setups": {
+        "title": "Setup Performance",
+        "empty": "No setup performance available yet."
+      },
+      "sessions": {
+        "title": "Session Performance",
+        "empty": "No session performance available yet."
+      },
+      "assets": {
+        "title": "Asset Performance",
+        "empty": "No asset performance available yet."
+      }
+    },
+    "table": {
+      "label": "Label",
+      "trades": "Trades",
+      "winRate": "Win rate",
+      "averageRisk": "Avg risk",
+      "realizedPnl": "Realized P&L"
+    },
+    "money": {
+      "loss": "Loss",
+      "profit": "Profit"
+    },
+    "errors": {
+      "eyebrow": "Discipline",
+      "title": "Error patterns",
+      "description": "Frequency and affected trades without severity weighting.",
+      "insightsTitle": "Trade Error Insights",
+      "empty": "No recorded Trade Errors.",
+      "byCategory": "By Category",
+      "bySeverity": "By Severity",
+      "count": "Errors",
+      "affectedTrades": "Affected Trades"
+    }
   }
 }

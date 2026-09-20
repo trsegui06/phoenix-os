@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/navigation/page-header";
 import { TradingDashboard } from "@/components/trading/dashboard/trading-dashboard";
 import { TradingFilters } from "@/components/trading/dashboard/trading-filters";
@@ -48,6 +49,7 @@ export default async function TradingPage({ searchParams }: { searchParams: Sear
   } = await client.auth.getUser();
   if (!user) redirect("/login");
 
+  const t = await getTranslations("dashboard");
   const search = await searchParams;
   let filter: TradingStatisticsFilter = {};
   let notice: string | null = null;
@@ -60,8 +62,7 @@ export default async function TradingPage({ searchParams }: { searchParams: Sear
       ...(search.account ? { tradingAccountId: search.account } : {}),
     });
   } catch (error) {
-    if (error instanceof TradingStatisticsValidationError)
-      notice = "Those filters were invalid, so the dashboard was reset.";
+    if (error instanceof TradingStatisticsValidationError) notice = t("notices.invalidFilters");
   }
 
   let accounts: Awaited<ReturnType<typeof listTradingAccounts>> = [];
@@ -86,27 +87,25 @@ export default async function TradingPage({ searchParams }: { searchParams: Sear
         getTradingErrorBreakdown(client, filter),
       ]);
     } catch {
-      notice = "Trading data is unavailable right now. Please try again shortly.";
+      notice = t("notices.unavailable");
     }
   } catch (error) {
     if (error instanceof TradingApplicationError && error.code === "TRADER_PROFILE_NOT_FOUND") {
       redirect("/onboarding");
     } else {
-      notice = "Trading data is unavailable right now. Please try again shortly.";
+      notice = t("notices.unavailable");
     }
   }
 
   return (
     <main className="mx-auto min-h-screen max-w-7xl overflow-x-hidden px-4 py-7 sm:px-6 sm:py-9 lg:px-8">
       <PageHeader
-        eyebrow="Trading cockpit"
-        title="Trading Dashboard"
+        eyebrow={t("page.eyebrow")}
+        title={t("page.title")}
         description={
           <>
-            <span className="block text-slate-300">Process before performance.</span>
-            <span className="mt-1 block text-sm text-slate-500">
-              Track execution, risk, consistency and learning from your real trading data.
-            </span>
+            <span className="block text-slate-300">{t("page.motto")}</span>
+            <span className="mt-1 block text-sm text-slate-500">{t("page.description")}</span>
           </>
         }
       />
@@ -127,7 +126,7 @@ export default async function TradingPage({ searchParams }: { searchParams: Sear
           role="status"
           className="mt-4 rounded-xl border border-emerald-900/60 bg-emerald-950/30 px-4 py-3 text-sm text-emerald-200"
         >
-          Trade recorded.
+          {t("notices.tradeRecorded")}
         </p>
       )}
       <div className="mt-6">
