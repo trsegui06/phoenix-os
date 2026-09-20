@@ -1,4 +1,9 @@
 import { expect, test } from "@playwright/test";
+import { createClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/supabase/database.types";
+import enMessages from "@/i18n/messages/en.json" with { type: "json" };
+import frMessages from "@/i18n/messages/fr.json" with { type: "json" };
+import esMessages from "@/i18n/messages/es.json" with { type: "json" };
 
 import { e2eMissingProfileUser, e2eUser } from "./auth-fixture";
 
@@ -802,3 +807,341 @@ test("completes the Review learning loop on mobile", async ({ page }) => {
     .press("Enter");
   await expect(page).toHaveURL(/\/trading$/);
 });
+for (const locale of ["en", "fr", "es"] as const) {
+  test(
+    "populated Dashboard locale/responsive matrix: " + locale,
+    async ({ page, browser }, testInfo) => {
+      test.setTimeout(180_000);
+      const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+      if (new URL(url).hostname !== "127.0.0.1")
+        throw new Error("Dashboard fixtures require disposable local Supabase.");
+      const client = createClient<Database>(
+        url,
+        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+        { auth: { persistSession: false } },
+      );
+      const credentials = {
+        email: "dashboard-" + locale + "-" + crypto.randomUUID() + "@example.test",
+        password: "Phoenix-local-test-123!",
+      };
+      const signup = await client.auth.signUp(credentials);
+      expect(signup.error).toBeNull();
+      const trader = await client
+        .from("traders")
+        .insert({
+          auth_user_id: signup.data.user!.id,
+          name: "Dashboard Fixture",
+          timezone: "UTC",
+          locale: "en",
+        })
+        .select("id")
+        .single()
+        .throwOnError();
+      const traderId = trader.data!.id;
+      const accounts = await client
+        .from("trading_accounts")
+        .insert(
+          ["EUR", "USD"].map((currency) => ({
+            trader_id: traderId,
+            account_name: "Dashboard Account Long Label " + currency,
+            broker: "Untranslated Broker",
+            account_type: "cash",
+            currency,
+            initial_balance_cents: 100000,
+            status: "active",
+          })),
+        )
+        .select("id,currency")
+        .throwOnError();
+      const session = await client
+        .from("sessions")
+        .insert({
+          trader_id: traderId,
+          session_date: "2026-08-17",
+          session_type: "London Session Long Untranslated Label",
+        })
+        .select("id")
+        .single()
+        .throwOnError();
+      const setup = await client
+        .from("setups")
+        .insert({
+          trader_id: traderId,
+          name: "Original Setup With A Long Untranslated Label",
+          timeframe: "5m",
+          entry_rules: "Entry",
+          exit_rules: "Exit",
+          validation_rules: "Validation",
+        })
+        .select("id")
+        .single()
+        .throwOnError();
+      const fixtures = [
+        { currency: "USD", pnl: -27564 },
+        { currency: "EUR", pnl: 0 },
+        { currency: "EUR", pnl: 10000 },
+        { currency: "EUR", pnl: -10000 },
+      ];
+      const trades = await client
+        .from("trades")
+        .insert(
+          fixtures.map(({ currency, pnl }) => ({
+            trader_id: traderId,
+            trading_account_id: accounts.data!.find((a) => a.currency === currency)!.id,
+            session_id: session.data!.id,
+            setup_id: setup.data!.id,
+            trade_date: "2026-08-17",
+            asset: "XAUUSD Original Asset Label",
+            direction: "long",
+            entry_price: 100,
+            stop_loss: 99,
+            take_profit: 102,
+            risk_basis_points: 125,
+            position_size: 1,
+            pnl_cents: pnl,
+            result: "Unchanged source result",
+          })),
+        )
+        .select("id")
+        .throwOnError();
+      await client
+        .from("trade_errors")
+        .insert({
+          trade_id: trades.data![0].id,
+          category: "Original category label",
+          severity: "Original severity",
+          description: "Fixture only",
+        })
+        .throwOnError();
+      const rawBefore = (await client.from("trades").select("*").order("id").throwOnError()).data;
+      const overviewBefore = (await client.rpc("trading_statistics_overview", {}).throwOnError())
+        .data;
+
+      const messages = { en: enMessages, fr: frMessages, es: esMessages }[locale];
+      const d = messages.dashboard;
+      await page.goto("/login");
+      await signIn(page, credentials);
+      await expect(page).toHaveURL(/\/trading$/);
+      await page.goto("/trading/settings");
+      if (locale !== "en") {
+        await page.getByLabel("Application language").selectOption(locale);
+        await expect(page.locator("html")).toHaveAttribute("lang", locale);
+      }
+      const expectedLoss = { en: "−$275.64", fr: "−275,64 $US", es: "−275,64 US$" }[locale];
+      const expectedZero = { en: "€0.00", fr: "0,00 €", es: "0,00 €" }[locale];
+      const expectedRate = { en: "33.33%", fr: "33,33 %", es: "33,33 %" }[locale];
+      const expectedErrorRate = { en: "25.00%", fr: "25,00 %", es: "25,00 %" }[locale];
+      const expectedRisk = { en: "1.25%", fr: "1,25 %", es: "1,25 %" }[locale];
+
+      for (const viewport of [
+        { width: 390, height: 844 },
+        { width: 768, height: 1024 },
+        { width: 1440, height: 900 },
+      ]) {
+        await page.setViewportSize(viewport);
+        await page.goto("/trading");
+        await expect(page.getByRole("heading", { name: d.page.title, exact: true })).toBeVisible();
+        await expect(
+          page.getByRole("heading", { name: d.errors.insightsTitle, exact: true }),
+        ).toBeVisible();
+        await expect(
+          page.getByRole("heading", { name: d.breakdowns.setups.title, exact: true }),
+        ).toBeVisible();
+        await expect(
+          page.getByRole("heading", { name: d.breakdowns.sessions.title, exact: true }),
+        ).toBeVisible();
+        await expect(
+          page.getByRole("heading", { name: d.breakdowns.assets.title, exact: true }),
+        ).toBeVisible();
+        await expect(
+          page
+            .getByRole("article")
+            .filter({ has: page.getByText(d.kpis.winRate, { exact: true }) }),
+        ).toContainText(expectedRate);
+        await expect(
+          page
+            .getByRole("article")
+            .filter({ has: page.getByText(d.kpis.errorRate, { exact: true }) }),
+        ).toContainText(expectedErrorRate);
+        await expect(
+          page
+            .getByRole("article")
+            .filter({ has: page.getByText(d.kpis.averageRisk, { exact: true }) }),
+        ).toContainText(expectedRisk);
+        const region = page.locator('[role="region"][aria-labelledby="pnl-detail-title"]');
+        const table = region.getByRole("table");
+        await expect(table.getByRole("columnheader")).toHaveText([
+          d.pnl.currency,
+          d.pnl.realized,
+          d.pnl.averageTrade,
+          d.pnl.grossProfit,
+          d.pnl.grossLoss,
+        ]);
+        const usd = table
+          .getByRole("row")
+          .filter({ has: page.getByRole("rowheader", { name: "USD", exact: true }) });
+        const eur = table
+          .getByRole("row")
+          .filter({ has: page.getByRole("rowheader", { name: "EUR", exact: true }) });
+        await expect(usd.getByRole("cell").last()).toHaveText(expectedLoss);
+        await expect(eur.getByRole("cell").first()).toHaveText(expectedZero);
+        await expect(table.getByRole("rowheader")).toHaveText(["EUR", "USD"]);
+        await expect(
+          page.getByRole("rowheader", {
+            name: "Original Setup With A Long Untranslated Label",
+            exact: true,
+          }),
+        ).toBeVisible();
+        await expect(
+          page.getByRole("rowheader", {
+            name: "London Session Long Untranslated Label",
+            exact: true,
+          }),
+        ).toBeVisible();
+
+        await region.scrollIntoViewIfNeeded();
+        const geometry = await region.evaluate((element) => {
+          const rect = element.getBoundingClientRect();
+          const headers = [...element.querySelectorAll("thead th")].map((cell) =>
+            cell.getBoundingClientRect(),
+          );
+          const cells = [...element.querySelectorAll("tbody tr:last-child td")].map((cell) =>
+            cell.getBoundingClientRect(),
+          );
+          const textFits = [...element.querySelectorAll("th,td")].every((cell) => {
+            const range = document.createRange();
+            range.selectNodeContents(cell);
+            const text = range.getBoundingClientRect(),
+              box = cell.getBoundingClientRect();
+            return (
+              text.left >= box.left &&
+              text.right <= box.right &&
+              text.top >= box.top &&
+              text.bottom <= box.bottom
+            );
+          });
+          return {
+            left: rect.left,
+            right: rect.right,
+            scrollable: element.scrollWidth > element.clientWidth,
+            headersSeparated: headers.every(
+              (box, i) => i === 0 || box.left >= headers[i - 1].right - 1,
+            ),
+            associated: cells.every((box, i) => Math.abs(box.right - headers[i + 1].right) < 1),
+            textFits,
+          };
+        });
+        expect(geometry.left).toBeGreaterThanOrEqual(0);
+        expect(geometry.right).toBeLessThanOrEqual(viewport.width);
+        expect(geometry.headersSeparated).toBe(true);
+        expect(geometry.associated).toBe(true);
+        expect(geometry.textFits).toBe(true);
+        if (viewport.width === 390) {
+          expect(geometry.scrollable).toBe(true);
+          await region.focus();
+          await page.keyboard.press("ArrowRight");
+          await expect
+            .poll(() => region.evaluate((element) => element.scrollLeft))
+            .toBeGreaterThan(0);
+        }
+        await region.evaluate((element) => {
+          element.scrollLeft = element.scrollWidth;
+        });
+        const lastCell = await usd.getByRole("cell").last().boundingBox();
+        const regionBox = await region.boundingBox();
+        expect(lastCell!.x).toBeGreaterThanOrEqual(regionBox!.x);
+        expect(lastCell!.x + lastCell!.width).toBeLessThanOrEqual(
+          regionBox!.x + regionBox!.width + 1,
+        );
+        await expectNoHorizontalOverflow(page, viewport.width);
+
+        // Check actual card/control bounds as page-level clipping can conceal overflow.
+        const clipped = await page
+          .locator("main article, main form, main select, main input, main button")
+          .evaluateAll((elements) =>
+            elements
+              .filter((el) => {
+                const r = el.getBoundingClientRect();
+                return (
+                  r.width > 0 &&
+                  (r.left < -1 || r.right > innerWidth + 1 || el.scrollWidth > el.clientWidth + 1)
+                );
+              })
+              .map((el) => el.tagName),
+          );
+        expect(clipped).toEqual([]);
+        const navigation = page.getByRole("navigation", {
+          name:
+            viewport.width < 1024
+              ? messages.navigation.mobileLabel
+              : messages.navigation.primaryLabel,
+        });
+        const links = navigation.getByRole("link");
+        await expect(links).toHaveCount(4);
+        expect(
+          await links.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("href"))),
+        ).toEqual(["/trading", "/trading/new", "/trading/reviews", "/trading/settings"]);
+        await expect(links.first()).toHaveAttribute("aria-current", "page");
+        await expect(navigation.locator('span[aria-hidden="true"]')).toHaveText(["", "", "", ""]);
+        await expect(navigation.locator('svg[aria-hidden="true"]')).toHaveCount(4);
+        await expect(links).toHaveText(
+          viewport.width < 1024
+            ? [
+                messages.navigation.dashboardMobile,
+                messages.navigation.newTradeMobile,
+                messages.navigation.reviewsMobile,
+                messages.navigation.settingsMobile,
+              ]
+            : [
+                messages.navigation.dashboard,
+                messages.navigation.newTrade,
+                messages.navigation.reviews,
+                messages.navigation.settings,
+              ],
+        );
+        await page.screenshot({
+          path: testInfo.outputPath("dashboard-" + viewport.width + ".png"),
+          fullPage: true,
+          caret: "initial",
+        });
+      }
+
+      await page.reload();
+      await expect(page.locator("html")).toHaveAttribute("lang", locale);
+      await expect(page.getByRole("heading", { name: d.page.title, exact: true })).toBeVisible();
+      await expect(page.getByText(expectedLoss, { exact: true }).first()).toBeVisible();
+      await page.getByLabel(d.filters.from, { exact: true }).fill("2026-08-01");
+      await page.getByLabel(d.filters.to, { exact: true }).fill("2026-08-31");
+      await page.getByRole("button", { name: d.filters.apply, exact: true }).click();
+      await expect(page).toHaveURL(/from=2026-08-01&to=2026-08-31&account=$/);
+      await expect(page.getByLabel(d.filters.from, { exact: true })).toHaveValue("2026-08-01");
+      await expect(page.getByLabel(d.filters.to, { exact: true })).toHaveValue("2026-08-31");
+      await page.goto("/trading?from=invalid&created=trade");
+      await expect(page.getByRole("status")).toHaveText([
+        d.notices.invalidFilters,
+        d.notices.tradeRecorded,
+      ]);
+      const otherContext = await browser.newContext({ locale: "en-US" });
+      try {
+        const otherPage = await otherContext.newPage();
+        await otherPage.goto("/login");
+        await signIn(otherPage, credentials);
+        await expect(otherPage).toHaveURL(/\/trading$/);
+        await expect(otherPage.locator("html")).toHaveAttribute("lang", locale);
+        await expect(
+          otherPage.getByRole("heading", { name: d.page.title, exact: true }),
+        ).toBeVisible();
+        await expect(otherPage.getByText(expectedLoss, { exact: true }).first()).toBeVisible();
+      } finally {
+        await otherContext.close();
+      }
+      expect((await client.from("trades").select("*").order("id").throwOnError()).data).toEqual(
+        rawBefore,
+      );
+      expect((await client.rpc("trading_statistics_overview", {}).throwOnError()).data).toEqual(
+        overviewBefore,
+      );
+      await client.auth.signOut();
+    },
+  );
+}

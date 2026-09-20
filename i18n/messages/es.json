@@ -173,5 +173,108 @@
       "accountPersistence": "No se pudo crear tu primera cuenta de trading. Inténtalo de nuevo.",
       "environmentPersistence": "No se pudo configurar tu entorno de trading. Inténtalo de nuevo."
     }
+  },
+  "dashboard": {
+    "page": {
+      "eyebrow": "Centro de control de trading",
+      "title": "Panel de trading",
+      "motto": "El proceso antes que el rendimiento.",
+      "description": "Sigue tu ejecución, riesgo, constancia y aprendizaje a partir de tus datos reales de trading."
+    },
+    "notices": {
+      "invalidFilters": "Los filtros no eran válidos. Se ha restablecido el panel.",
+      "unavailable": "Los datos de trading no están disponibles ahora. Inténtalo de nuevo en unos momentos.",
+      "tradeRecorded": "Operación registrada."
+    },
+    "filters": {
+      "accessibleLabel": "Filtros de estadísticas de trading",
+      "from": "Desde",
+      "to": "Hasta",
+      "account": "Cuenta de trading",
+      "allAccounts": "Todas las cuentas",
+      "apply": "Aplicar",
+      "reset": "Restablecer"
+    },
+    "empty": {
+      "title": "Aún no hay operaciones registradas.",
+      "description": "Tus estadísticas aparecerán cuando añadas datos de trading."
+    },
+    "performance": {
+      "eyebrow": "Indicadores actuales",
+      "title": "Rendimiento, riesgo y disciplina",
+      "description": "Una visión centrada en los resultados realizados y la calidad del proceso."
+    },
+    "pnl": {
+      "title": "P&L realizado por divisa",
+      "currencyNotice": "Las divisas nunca se combinan.",
+      "empty": "Aún no hay P&L realizado.",
+      "detailHint": "Consulta abajo el detalle del P&L realizado, el resultado medio, las ganancias brutas y las pérdidas brutas.",
+      "detailTitle": "Detalle del P&L",
+      "detailDescription": "Resultados realizados exactos, por divisa.",
+      "currency": "Divisa",
+      "realized": "Realizado",
+      "averageTrade": "Resultado medio por operación",
+      "grossProfit": "Ganancias brutas",
+      "grossLoss": "Pérdidas brutas"
+    },
+    "kpis": {
+      "winRate": "Tasa de acierto",
+      "averageRisk": "Riesgo medio",
+      "riskNote": "Operaciones con riesgo registrado",
+      "errorRate": "Tasa de errores de trading",
+      "affectedTrades": "{count, plural, one {# operación afectada} other {# operaciones afectadas}}",
+      "outcomes": "{wins} G · {losses} P · {breakeven} BE",
+      "outcomesAccessible": "Ganadoras: {wins}; perdedoras: {losses}; en equilibrio: {breakeven}."
+    },
+    "activity": {
+      "eyebrow": "Actividad y aprendizaje",
+      "title": "Contexto de la práctica",
+      "description": "Indicadores de volumen y aprendizaje, separados intencionadamente del rendimiento.",
+      "totalTrades": "Total de operaciones",
+      "tradeCounts": "{closed, plural, one {# cerrada} other {# cerradas}} · {unresolved, plural, one {# sin resolver} other {# sin resolver}}",
+      "reviews": "Revisiones",
+      "reviewScope": "Revisiones que coinciden total o parcialmente con el período",
+      "objectives": "Objetivos",
+      "objectiveScope": "Todo el trader"
+    },
+    "breakdowns": {
+      "eyebrow": "Desglose del rendimiento",
+      "title": "Patrones de ejecución",
+      "description": "Orden exacto de los datos de origen, sin clasificación ni normalización de etiquetas.",
+      "setups": {
+        "title": "Rendimiento por Setup",
+        "empty": "Aún no hay datos de rendimiento por Setup."
+      },
+      "sessions": {
+        "title": "Rendimiento por Session",
+        "empty": "Aún no hay datos de rendimiento por Session."
+      },
+      "assets": {
+        "title": "Rendimiento por activo",
+        "empty": "Aún no hay datos de rendimiento por activo."
+      }
+    },
+    "table": {
+      "label": "Etiqueta",
+      "trades": "Operaciones",
+      "winRate": "Tasa de acierto",
+      "averageRisk": "Riesgo medio",
+      "realizedPnl": "P&L realizado"
+    },
+    "money": {
+      "loss": "Pérdida",
+      "profit": "Ganancia"
+    },
+    "errors": {
+      "eyebrow": "Disciplina",
+      "title": "Patrones de errores",
+      "description": "Frecuencia y operaciones afectadas, sin ponderación por gravedad.",
+      "insightsTitle": "Análisis de errores de trading",
+      "empty": "No hay errores de trading registrados.",
+      "byCategory": "Por categoría",
+      "bySeverity": "Por gravedad",
+      "count": "Errores",
+      "affectedTrades": "Operaciones afectadas"
+    }
   }
 }
